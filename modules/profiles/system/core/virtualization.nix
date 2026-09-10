@@ -1,4 +1,9 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 {
   options.machine.virtualization = {
     virtualbox = {
@@ -6,6 +11,9 @@
     };
     docker = {
       enable = lib.mkEnableOption "Docker";
+    };
+    libvirt = {
+      enable = lib.mkEnableOption "libvirt with QEMU";
     };
   };
   config = lib.mkMerge [
@@ -21,6 +29,30 @@
         rootless.setSocketVariable = true;
         #daemon.settings = { data-root = "/etc/docker"; };
       };
+    })
+    (lib.mkIf config.machine.virtualization.libvirt.enable {
+      virtualisation.libvirtd.enable = true;
+      virtualisation.libvirtd.qemu.vhostUserPackages = [ pkgs.virtiofsd ];
+      programs.virt-manager.enable = true;
+
+      # Both libvirt's encrypted secret and systemd's host key live in
+      # persistent state on this impermanent host.
+      systemd.services.virt-secret-init-encryption.unitConfig.RequiresMountsFor = [
+        "/var/lib/systemd"
+        "/var/lib/libvirt"
+      ];
+      systemd.services.libvirtd.unitConfig.RequiresMountsFor = [
+        "/var/lib/systemd"
+        "/var/lib/libvirt"
+      ];
+
+      users.extraGroups.libvirtd.members = [ config.machine.mainUser ];
+
+      environment.systemPackages = with pkgs; [
+        dnsmasq
+        libguestfs
+        qemu
+      ];
     })
   ];
 }

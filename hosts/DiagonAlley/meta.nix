@@ -52,6 +52,7 @@
 
     virtualization = {
       docker.enable = true;
+      libvirt.enable = true;
       virtualbox.enable = true;
     };
   };
