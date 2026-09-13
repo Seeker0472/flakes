@@ -96,7 +96,7 @@ creation_rules:
           - *diagonal_alley_age
           - *burrow_age
 
-  - path_regex: users/seeker/codex-auth\.secrets\.json$
+  - path_regex: users/seeker/ai\.secrets\.json$
     unencrypted_suffix: _unencrypted
     key_groups:
       - age:

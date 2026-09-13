@@ -4,8 +4,8 @@
 }:
 {
   programs = {
+    ai.enable = lib.mkDefault true;
     bash.enable = true;
-    codex.enable = lib.mkDefault true;
     direnv.enable = true;
     fish.enable = true;
     tmux.enable = true;

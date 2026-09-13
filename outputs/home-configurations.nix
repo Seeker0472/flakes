@@ -11,7 +11,7 @@ in
       inputs.nixvim.homeModules.nixvim
       inputs.sops-nix.homeManagerModules.sops
       ../modules/profiles/programs/nixvim/default.nix
-      ../users/seeker/codex-secrets.nix
+      ../users/seeker/ai-secrets.nix
       ../users/seeker/home.nix
       ../hosts/gpu01/home.nix
     ];

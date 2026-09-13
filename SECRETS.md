@@ -9,11 +9,11 @@ SOPS uses two human-managed age identities:
 and `DiagonAlley` can decrypt their own SSH client key and the shared secrets
 consumed by that host. `DiagonAlley` and `burrow` also receive the administrator
 SSH key so they retain VPS maintenance access. `burrow` deliberately does not
-receive the shared external, GitHub, or Codex credentials.
+receive the shared external, GitHub, or AI relay credentials.
 `gpu01` has a separate runtime identity, scoped to the shared external and
-GitHub keys plus the shared Codex authentication file.
+GitHub keys plus the shared AI relay authentication file.
 The `mi15` and `miPad` nix-on-droid environments each have a dedicated runtime
-identity. They can decrypt the same SSH and Codex secrets as `miLaptop`, but
+identity. They can decrypt the same SSH and AI relay secrets as `miLaptop`, but
 their age private keys are kept separately so either Android device can be
 revoked without changing the other one.
 The bootstrap identities live under the git-ignored `.secrets/age/` directory.
@@ -39,13 +39,32 @@ not confidential, and keeping them readable lets NixOS and the standalone
 gpu01 Home Manager configuration build `authorized_keys` without decrypting a
 private key. SOPS still remains the single source for each key pair.
 
-## Codex authentication
+## AI relay authentication
 
-`users/seeker/codex-auth.secrets.json` contains the complete Codex
-`auth.json`. Home Manager deploys it through sops-nix with mode `0600` on
-`miLaptop`, `DiagonAlley`, `devVM`, `nixos-wsl`, `gpu01`, `mi15`, and `miPad`.
+`users/seeker/ai.secrets.json` holds one rust.cat API key per agent:
+
+- `codex_api_key`
+- `grok_api_key`
+- `kimi_api_key`
+
+Replace each `CHANGE_ME` placeholder with:
+
+```bash
+sops users/seeker/ai.secrets.json
+```
+
+When `programs.ai.enable` is set, Home Manager deploys those values on
+`miLaptop`, `DiagonAlley`, `devVM`, `nixos-wsl`, `gpu01`, `mi15`, and
+`miPad` as:
+
+- Codex: `~/.codex/auth.json` (`OPENAI_API_KEY`) and session `OPENAI_API_KEY`
+- Grok: session `XAI_API_KEY`
+- Kimi: session `KIMI_API_KEY`. `~/.kimi-code/config.toml` is local runtime
+  state, like `~/.codex/config.toml`.
+
 The keyless development container deliberately does not import this secret
-module.
+module and forces `programs.ai.enable` off. `burrow` does not receive the
+relay credentials.
 
 ## Taskwarrior synchronization
 

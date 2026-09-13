@@ -13,39 +13,43 @@ let
     extraSpecialArgs = { inherit inputs; };
     modules = [
       ../users/seeker/home.nix
-      {
-        home = {
-          inherit uid;
-          inherit homeDirectory;
-          activationGenerateGcRoot = false;
-          packages = with pkgs; [
-            coreutils
-            curl
-            findutils
-            gnugrep
-            gzip
-            neovim
-            nix
-            python3
-            rclone
-            vim
-            wget
-          ];
-          username = user;
-        };
-        nix = {
-          package = pkgs.nix;
-          settings = {
-            build-users-group = "";
-            experimental-features = [
-              "nix-command"
-              "flakes"
+      (
+        { lib, ... }:
+        {
+          home = {
+            inherit uid;
+            inherit homeDirectory;
+            activationGenerateGcRoot = false;
+            packages = with pkgs; [
+              coreutils
+              curl
+              findutils
+              gnugrep
+              gzip
+              neovim
+              nix
+              python3
+              rclone
+              vim
+              wget
             ];
-            sandbox = false;
+            username = user;
           };
-        };
-        systemd.user.enable = false;
-      }
+          nix = {
+            package = pkgs.nix;
+            settings = {
+              build-users-group = "";
+              experimental-features = [
+                "nix-command"
+                "flakes"
+              ];
+              sandbox = false;
+            };
+          };
+          programs.ai.enable = lib.mkForce false;
+          systemd.user.enable = false;
+        }
+      )
     ];
   };
 

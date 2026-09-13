@@ -13,7 +13,7 @@ in
     users.seeker = {
       imports = [
         inputs.sops-nix.homeManagerModules.sops
-        ./codex-secrets.nix
+        ./ai-secrets.nix
         ./home.nix
         ./ssh-secrets.nix
       ];
