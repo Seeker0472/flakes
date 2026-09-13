@@ -4,19 +4,51 @@
   pkgs,
   ...
 }:
-with lib;
-
 let
   cfg = config.machine.programs.mihomo;
   deploySecrets = config.machine.secrets.deploy;
   tunInterface = "Meta";
 
+  httpPort = 7890;
+  socksPort = 7891;
+  externalControllerPort = 9090;
+  dnsPort = 1053;
+
+  privateCIDRs = [
+    "127.0.0.0/8"
+    "10.0.0.0/8"
+    "172.16.0.0/12"
+    "192.168.0.0/16"
+    "100.64.0.0/10"
+    "::1/128"
+    "fc00::/7"
+    "fe80::/10"
+  ];
+
+  # Strip the scheme and optional port from the netbird management URL so the
+  # rule keeps working if machine.programs.netbird.managementUrl changes.
+  netbirdHost = builtins.head (
+    lib.splitString ":" (
+      lib.removePrefix "https://" (
+        lib.removePrefix "http://" config.machine.programs.netbird.managementUrl
+      )
+    )
+  );
+
+  directRules = lib.concatMapStringsSep "\n" (
+    cidr:
+    if lib.hasInfix ":" cidr then
+      "  - IP-CIDR6,${cidr},DIRECT,no-resolve"
+    else
+      "  - IP-CIDR,${cidr},DIRECT,no-resolve"
+  ) privateCIDRs;
+
   inboundConfig =
     if cfg.share.enable then
-      concatStringsSep "\n" (
+      lib.concatStringsSep "\n" (
         [
-          "port: 7890"
-          "socks-port: 7891"
+          "port: ${toString httpPort}"
+          "socks-port: ${toString socksPort}"
           "allow-lan: true"
           ''bind-address: "*"''
           "lan-allowed-ips:"
@@ -25,13 +57,13 @@ let
       )
     else
       ''
-        port: 7890
-        socks-port: 7891
+        port: ${toString httpPort}
+        socks-port: ${toString socksPort}
         allow-lan: false
         bind-address: 127.0.0.1
       '';
 
-  webConfig = optionalString cfg.web.enable ''
+  webConfig = lib.optionalString cfg.web.enable ''
     external-ui: "${pkgs.metacubexd}"
   '';
 
@@ -40,7 +72,7 @@ let
 
     mode: rule
     log-level: info
-    external-controller: 127.0.0.1:9090
+    external-controller: 127.0.0.1:${toString externalControllerPort}
     ipv6: true
     keep-alive-interval: 30
     keep-alive-idle: 60
@@ -59,7 +91,7 @@ let
       enable: true
       cache-algorithm: arc
       respect-rules: true
-      listen: 127.0.0.1:1053
+      listen: 127.0.0.1:${toString dnsPort}
       enhanced-mode: fake-ip
       fake-ip-range: 198.18.0.1/16
 
@@ -121,14 +153,7 @@ let
       auto-detect-interface: true
       strict-route: false
       route-exclude-address:
-        - 127.0.0.0/8
-        - 10.0.0.0/8
-        - 172.16.0.0/12
-        - 192.168.0.0/16
-        - 100.64.0.0/10
-        - ::1/128
-        - fc00::/7
-        - fe80::/10
+    ${lib.concatMapStringsSep "\n" (cidr: "    - ${cidr}") privateCIDRs}
   '';
 
   providersAndRules = ''
@@ -169,17 +194,10 @@ let
 
     rules:
       - GEOSITE,category-ads-all,REJECT
-      - DOMAIN,netbird.vps.seekerer.com,DIRECT
+      - DOMAIN,${netbirdHost},DIRECT
       - DOMAIN-SUFFIX,lan,DIRECT
       - DOMAIN-SUFFIX,local,DIRECT
-      - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
-      - IP-CIDR,10.0.0.0/8,DIRECT,no-resolve
-      - IP-CIDR,172.16.0.0/12,DIRECT,no-resolve
-      - IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
-      - IP-CIDR,100.64.0.0/10,DIRECT,no-resolve
-      - IP-CIDR6,::1/128,DIRECT,no-resolve
-      - IP-CIDR6,fc00::/7,DIRECT,no-resolve
-      - IP-CIDR6,fe80::/10,DIRECT,no-resolve
+    ${directRules}
       - GEOSITE,cn,DIRECT
       - GEOIP,cn,DIRECT,no-resolve
       - MATCH,Proxy
@@ -215,52 +233,65 @@ in
       web.enable = lib.mkEnableOption "Mihomo web dashboard";
     };
   };
-  config = mkIf (cfg.enable && deploySecrets) {
-    networking.proxy = mkIf (cfg.enable && !cfg.tun.enable) {
-      default = "http://localhost:7890";
-      noProxy = "127.0.0.1,localhost,::1,.lan,.local";
-    };
 
-    networking.firewall = mkMerge [
-      (mkIf cfg.tun.enable {
-        trustedInterfaces = [ tunInterface ];
-      })
-      (mkIf (cfg.share.enable && cfg.share.openFirewall) {
-        allowedTCPPorts = [
-          7890
-          7891
-        ];
-        allowedUDPPorts = [ 7891 ];
-      })
-    ];
+  config = lib.mkMerge [
+    {
+      warnings =
+        lib.optional (cfg.enable && !deploySecrets)
+          "machine.programs.mihomo is enabled but machine.secrets.deploy is false; mihomo will not be configured because its config requires sops secrets.";
+    }
 
-    sops.secrets = {
-      airport_mojie_url.sopsFile = ./mihomo.secrets.yaml;
-      airport_ikuuu_url.sopsFile = ./mihomo.secrets.yaml;
-      mihomo_secret.sopsFile = ./mihomo.secrets.yaml;
-    };
+    (lib.mkIf (cfg.enable && deploySecrets) {
+      networking.proxy = lib.mkIf (!cfg.tun.enable) {
+        default = "http://localhost:${toString httpPort}";
+        noProxy = "127.0.0.1,localhost,::1,.lan,.local";
+      };
 
-    sops.templates."mihomo-config.yaml" = {
-      owner = "root";
-      group = "root";
-      mode = "0400";
-      restartUnits = [ "mihomo.service" ];
-      content = ''
-        ${baseConfig}
-        ${webConfig}
-        ${optionalString cfg.tun.enable tunConfig}
-        ${providersAndRules}
-      '';
-    };
+      # Mihomo's tun mode hijacks DNS (any:53); systemd-resolved conflicts.
+      # See https://github.com/tailscale/tailscale/issues/4254.
+      services.resolved.enable = !(cfg.enable && cfg.tun.enable);
 
-    systemd.services.mihomo.environment = mkIf cfg.web.enable {
-      SAFE_PATHS = "${pkgs.metacubexd}";
-    };
+      networking.firewall = lib.mkMerge [
+        (lib.mkIf cfg.tun.enable {
+          trustedInterfaces = [ tunInterface ];
+        })
+        (lib.mkIf (cfg.share.enable && cfg.share.openFirewall) {
+          allowedTCPPorts = [
+            httpPort
+            socksPort
+          ];
+          allowedUDPPorts = [ socksPort ];
+        })
+      ];
 
-    services.mihomo = {
-      enable = true;
-      configFile = config.sops.templates."mihomo-config.yaml".path;
-      tunMode = cfg.tun.enable;
-    };
-  };
+      sops.secrets = {
+        airport_mojie_url.sopsFile = ./mihomo.secrets.yaml;
+        airport_ikuuu_url.sopsFile = ./mihomo.secrets.yaml;
+        mihomo_secret.sopsFile = ./mihomo.secrets.yaml;
+      };
+
+      sops.templates."mihomo-config.yaml" = {
+        owner = "root";
+        group = "root";
+        mode = "0400";
+        restartUnits = [ "mihomo.service" ];
+        content = ''
+          ${baseConfig}
+          ${webConfig}
+          ${lib.optionalString cfg.tun.enable tunConfig}
+          ${providersAndRules}
+        '';
+      };
+
+      systemd.services.mihomo.environment = lib.mkIf cfg.web.enable {
+        SAFE_PATHS = "${pkgs.metacubexd}";
+      };
+
+      services.mihomo = {
+        enable = true;
+        configFile = config.sops.templates."mihomo-config.yaml".path;
+        tunMode = cfg.tun.enable;
+      };
+    })
+  ];
 }

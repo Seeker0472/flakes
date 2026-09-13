@@ -10,5 +10,16 @@ in
 
   networking.hostName = host.hostName;
   system.stateVersion = host.stateVersion;
-  machine = host.machine;
+  machine =
+    host.machine
+    // (
+      if host ? disk then
+        {
+          disko = host.disk // {
+            enable = true;
+          };
+        }
+      else
+        { }
+    );
 }

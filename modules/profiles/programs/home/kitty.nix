@@ -12,15 +12,19 @@
         name = "Maple Mono NF CN";
         size = 18;
       };
-      settings = {
-        mouse_hide_wait = "-1.0";
-        remember_window_size = "no";
-        cursor_trail = "3";
-        shell = "${pkgs.fish}/bin/fish";
-        initial_window_width = "90c";
-        initial_window_height = "26c";
-        background_opacity = "0.92";
-      };
+      settings = lib.mkMerge [
+        {
+          mouse_hide_wait = "-1.0";
+          remember_window_size = "no";
+          cursor_trail = "3";
+          initial_window_width = "90c";
+          initial_window_height = "26c";
+          background_opacity = "0.92";
+        }
+        (lib.mkIf config.programs.fish.enable {
+          shell = "${pkgs.fish}/bin/fish";
+        })
+      ];
       keybindings = {
         "ctrl+shift+enter" = "launch --cwd=current --copy-env --copy-cmdline";
         "ctrl+shift+alt+enter" = "launch --cwd=current";

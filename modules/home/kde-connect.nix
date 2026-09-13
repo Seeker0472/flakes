@@ -3,11 +3,8 @@
   osConfig,
   ...
 }:
-let
-  kdeconnectEnabled = lib.attrByPath [ "machine" "programs" "kdeconnect" "enable" ] false osConfig;
-in
 {
-  config = lib.mkIf kdeconnectEnabled {
+  config = lib.mkIf osConfig.machine.programs.kdeconnect.enable {
     services.kdeconnect.enable = true;
   };
 }

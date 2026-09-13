@@ -1,4 +1,5 @@
 {
+  config,
   lib,
   pkgs,
   osConfig,
@@ -29,13 +30,9 @@ let
       ''
   );
 
-  #runInRTG = pkg: bin: args: "${killRTG}/bin/kill-rtg && ${pkgs.kitty}/bin/kitty -o font_size=14 -o confirm_os_window_close=0 --class RTG ${
-  #  lib.getExe pkg
-  #} ${args}";
-
   runInRTG =
     pkg: bin: args:
-    "${killRTG}/bin/kill-rtg && ${pkgs.kitty}/bin/kitty -o font_size=14 -o confirm_os_window_close=0 --class RTG ${pkg}/bin/${bin} ${args}";
+    "${killRTG}/bin/kill-rtg && ${pkgs.kitty}/bin/kitty -o font_size=14 -o confirm_os_window_close=0 --class RTG ${lib.getExe' pkg bin} ${args}";
 
   gotobedScript = pkgs.writeShellScriptBin "gotobed" ''
     start_hour=22
@@ -53,7 +50,7 @@ let
   '';
 in
 {
-  config = lib.mkIf ((cfg.waybar.enable or false) && !(cfg.quickshell.enable or false)) {
+  config = lib.mkIf (cfg.waybar.enable or false) {
     xdg.configFile."waybar/style.css".source = ./style.css;
 
     programs.waybar = {
@@ -186,11 +183,19 @@ in
               hands-free = " ";
               headset = "󰋌 ";
               phone = " ";
-              "alsa_output.pci-0000_00_1f.3-platform-skl_hda_dsp_generic.HiFi__Speaker__sink" = [
-                "  "
-                "  "
-                "  "
-              ];
+              ${
+                lib.attrByPath [
+                  "machine"
+                  "de"
+                  "waybar"
+                  "internalAudioSink"
+                ] "alsa_output.pci-0000_00_1f.3-platform-skl_hda_dsp_generic.HiFi__Speaker__sink" osConfig
+              } =
+                [
+                  "  "
+                  "  "
+                  "  "
+                ];
               default = [
                 "  "
                 "  "
@@ -227,7 +232,7 @@ in
               <big>{:%Y %B}</big>
               <tt><small>{calendar}</small></tt>'';
             format-alt = "{:%Y-%m-%d}";
-            on-click-right = runInRTG pkgs.neovim "nvim" "~/Documents/todo.md";
+            on-click-right = runInRTG pkgs.neovim "nvim" "${config.home.homeDirectory}/Documents/todo.md";
           };
 
           "custom/gotobed" = {
@@ -291,7 +296,6 @@ in
           };
 
           "cava" = {
-            # cava_config = "/home/seeker/.config/cava/config_bar";
             framerate = 20;
             autosens = 1;
             sensitivity = 5;

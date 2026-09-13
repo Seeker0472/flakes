@@ -1,7 +1,7 @@
-{ config, ... }:
+{ config, lib, ... }:
 let
-  sshKeys = import ./ssh-public-keys.nix;
-  home = config.home.homeDirectory;
+  helpers = import ./ssh-key-pair.nix { inherit config lib; };
+  inherit (helpers) mkKeyPair;
 in
 {
   programs.ssh.settings = {
@@ -15,30 +15,5 @@ in
     };
   };
 
-  sops.secrets = {
-    "ssh-external-private" = {
-      sopsFile = sshKeys.files.external;
-      key = "private_key";
-      path = "${home}/.ssh/id_external";
-      mode = "0600";
-    };
-    "ssh-external-public" = {
-      sopsFile = sshKeys.files.external;
-      key = "public_key_unencrypted";
-      path = "${home}/.ssh/id_external.pub";
-      mode = "0644";
-    };
-    "ssh-github-private" = {
-      sopsFile = sshKeys.files.github;
-      key = "private_key";
-      path = "${home}/.ssh/id_github";
-      mode = "0600";
-    };
-    "ssh-github-public" = {
-      sopsFile = sshKeys.files.github;
-      key = "public_key_unencrypted";
-      path = "${home}/.ssh/id_github.pub";
-      mode = "0644";
-    };
-  };
+  sops.secrets = mkKeyPair "ssh-external" "external" // mkKeyPair "ssh-github" "github";
 }

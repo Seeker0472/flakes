@@ -12,8 +12,7 @@ in
   home-manager = {
     users.seeker = {
       imports = [
-        inputs.sops-nix.homeManagerModules.sops
-        ./ai-secrets.nix
+        ./hm-base.nix
         ./home.nix
         ./ssh-secrets.nix
       ];

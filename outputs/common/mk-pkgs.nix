@@ -1,5 +1,9 @@
-{ inputs, system }:
+{
+  inputs,
+  system,
+  overlays ? [ ],
+}:
 import inputs.nixpkgs {
-  inherit system;
+  inherit system overlays;
   config.allowUnfree = true;
 }

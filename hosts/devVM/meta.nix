@@ -13,7 +13,6 @@
     secrets = {
       deploy = true;
       nixConfig.enable = true;
-      ageKeyPath = "/home/seeker/.config/sops/age/keys.txt";
       webdav.enable = true;
     };
 

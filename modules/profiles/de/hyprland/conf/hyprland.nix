@@ -5,10 +5,11 @@
   ...
 }:
 let
-  hyprlandEnabled = lib.attrByPath [
+  hyprlandEnabled = (import ../../enabled.nix lib osConfig);
+  wofiEnabled = lib.attrByPath [
     "machine"
     "de"
-    "hyprland"
+    "wofi"
     "enable"
   ] false osConfig;
 in
@@ -23,20 +24,20 @@ in
         # source the nwg-displays generated config
         source = ./monitors.conf
       '';
-      settings = {
-        "$menu" = "wofi --show drun -a";
+      settings =
+        lib.optionalAttrs wofiEnabled {
+          "$menu" = "wofi --show drun -a";
+        }
+        // {
+          env = [
+            "QT_QPA_PLATFORM,wayland;xcb"
+            "QT_IM_MODULE,fcitx"
+          ];
 
-        env = [
-          "QT_QPA_PLATFORM,wayland;xcb"
-          "QT_IM_MODULE,fcitx"
-          # "HYPRCURSOR_THEME,default"
-          # "HYPRCURSOR_SIZE,24"
-        ];
-
-        xwayland = {
-          force_zero_scaling = true;
+          xwayland = {
+            force_zero_scaling = true;
+          };
         };
-      };
     };
   };
 }

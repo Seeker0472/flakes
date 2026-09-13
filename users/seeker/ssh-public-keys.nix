@@ -28,11 +28,5 @@ in
 
   github = githubKey;
 
-  authorizedKeys = [
-    adminKey
-    clientKeys.DiagonAlley
-    clientKeys.miLaptop
-    clientKeys.devVM
-    clientKeys.nixos-wsl
-  ];
+  authorizedKeys = [ adminKey ] ++ builtins.attrValues clientKeys;
 }

@@ -21,11 +21,10 @@ in
   home-manager = {
     users.seeker = {
       imports = [
-        inputs.sops-nix.homeManagerModules.sops
         inputs.zen-browser.homeModules.beta
         inputs.aloha.homeManagerModules.default
-        ./ai-secrets.nix
-        ./miLaptop.nix
+        ./hm-base.nix
+        ./desktop-host.nix
       ];
     };
   };

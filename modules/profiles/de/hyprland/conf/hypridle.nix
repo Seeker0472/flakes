@@ -5,12 +5,8 @@
   ...
 }:
 let
-  hyprlandEnabled = lib.attrByPath [
-    "machine"
-    "de"
-    "hyprland"
-    "enable"
-  ] false osConfig;
+  hyprlandEnabled = (import ../../enabled.nix lib osConfig);
+  idle = import ../../idle-common.nix { inherit lib pkgs; };
 in
 {
   config = lib.mkIf hyprlandEnabled {
@@ -18,25 +14,24 @@ in
       enable = true;
       settings = {
         general = {
-          lock_cmd = "${pkgs.procps}/bin/pidof hyprlock || ${pkgs.hyprlock}/bin/hyprlock";
-          unlock_cmd = ''${pkgs.libnotify}/bin/notify-send "unlock!"'';
-          before_sleep_cmd = "${pkgs.systemd}/bin/loginctl lock-session";
+          lock_cmd = "${idle.pidof} hyprlock || ${pkgs.hyprlock}/bin/hyprlock";
+          before_sleep_cmd = idle.lockSession;
           ignore_dbus_inhibit = false;
           ignore_systemd_inhibit = false;
         };
 
         listener = [
           {
-            timeout = 240;
-            on-timeout = ''${pkgs.acpi}/bin/acpi -a | ${pkgs.gnugrep}/bin/grep -q "off-line" && ${pkgs.libnotify}/bin/notify-send "Zzz"'';
+            timeout = idle.timeouts.notify;
+            on-timeout = "${idle.onBattery} && ${idle.zzzNotify}";
           }
           {
-            timeout = 300;
-            on-timeout = ''${pkgs.acpi}/bin/acpi -a | ${pkgs.gnugrep}/bin/grep -q "off-line" && ${pkgs.systemd}/bin/loginctl lock-session'';
+            timeout = idle.timeouts.lock;
+            on-timeout = "${idle.onBattery} && ${idle.lockSession}";
           }
           {
-            timeout = 600;
-            on-timeout = ''${pkgs.acpi}/bin/acpi -a | ${pkgs.gnugrep}/bin/grep -q "off-line" && ${pkgs.systemd}/bin/systemctl suspend-then-hibernate'';
+            timeout = idle.timeouts.suspend;
+            on-timeout = "${idle.onBattery} && ${idle.suspendThenHibernate}";
           }
         ];
       };

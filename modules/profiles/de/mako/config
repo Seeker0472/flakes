@@ -38,7 +38,7 @@ height=800
 width=800
 max-icon-size=1000
 icon-location=bottom
-on-button-left=exec makoctl dismiss -a;xdg-open /tmp/screenshot.png
+on-button-left=exec makoctl dismiss -a;xdg-open "$(ls -t /tmp/screenshots/screenshot-*.png 2>/dev/null | head -n1)"
 
 [desktop-entry=org.kde.kdeconnect.daemon]
 default-timeout=200000

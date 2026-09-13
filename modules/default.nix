@@ -17,6 +17,8 @@
     mainUser = lib.mkOption {
       type = lib.types.str;
       default = "seeker";
+      # Personal default: fine for this single-user config; set machine.mainUser
+      # explicitly on any host with a different primary user.
       description = "Main user of this machine";
     };
     cpu = lib.mkOption {

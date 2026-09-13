@@ -1,3 +1,3 @@
-_: {
-  networking.networkmanager.enable = true;
+{ lib, ... }: {
+  networking.networkmanager.enable = lib.mkDefault true;
 }

@@ -1,11 +1,6 @@
 { inputs, ... }:
 let
   lib = inputs.nixpkgs.lib;
-  miLaptop = import ../hosts/miLaptop/meta.nix;
-  diagonalAlley = import ../hosts/DiagonAlley/meta.nix;
-  devVM = import ../hosts/devVM/meta.nix;
-  kingsCross = import ../hosts/KingsCross/meta.nix;
-  burrow = import ../hosts/burrow/meta.nix;
 
   mkNixos =
     {
@@ -19,83 +14,60 @@ let
       modules = baseModules ++ modules;
     };
 
-  miLaptopConfiguration = mkNixos {
-    inherit (miLaptop) system;
-    baseModules = [
-      ./common/nixpkgs-settings.nix
-      ../modules/bundles/desktop.nix
-    ];
-    modules = [
-      ../hosts/miLaptop
-      ../users/seeker
-    ];
+  hosts = {
+    miLaptop = {
+      bundle = ../modules/bundles/desktop.nix;
+      userModule = ../users/seeker;
+    };
+    DiagonAlley = {
+      bundle = ../modules/bundles/desktop.nix;
+      userModule = ../users/seeker;
+    };
+    devVM = {
+      bundle = ../modules/bundles/development.nix;
+      userModule = ../users/seeker/headless.nix;
+    };
+    nixos-wsl = {
+      system = "x86_64-linux";
+      bundle = ../modules/bundles/wsl.nix;
+      extraModules = [ inputs.nixos-wsl.nixosModules.default ];
+      userModule = ../users/seeker/wsl.nix;
+    };
+    "King'sCross" = {
+      hostDir = ../hosts/KingsCross;
+      bundle = ../modules/bundles/server.nix;
+    };
+    burrow = {
+      bundle = ../modules/bundles/gateway.nix;
+      userModule = ../users/seeker/burrow.nix;
+    };
   };
 
-  devVMConfiguration = mkNixos {
-    inherit (devVM) system;
-    baseModules = [
-      ./common/nixpkgs-settings.nix
-      ../modules/bundles/development.nix
-    ];
-    modules = [
-      ../hosts/devVM
-      ../users/seeker/headless.nix
-    ];
-  };
+  mkHost =
+    name:
+    {
+      hostDir ? ../hosts/${name},
+      system ? (import (hostDir + "/meta.nix")).system,
+      bundle,
+      extraModules ? [ ],
+      userModule ? null,
+    }:
+    mkNixos {
+      inherit system;
+      baseModules = [
+        ./common/nixpkgs-settings.nix
+        bundle
+      ]
+      ++ extraModules;
+      modules = [ hostDir ] ++ lib.optional (userModule != null) userModule;
+    };
 
-  wslConfiguration = mkNixos {
-    system = "x86_64-linux";
-    baseModules = [
-      ./common/nixpkgs-settings.nix
-      inputs.nixos-wsl.nixosModules.default
-      ../modules/bundles/wsl.nix
-    ];
-    modules = [
-      ../hosts/nixos-wsl
-      ../users/seeker/wsl.nix
-    ];
-  };
-
-  kingsCrossConfiguration = mkNixos {
-    inherit (kingsCross) system;
-    baseModules = [
-      ./common/nixpkgs-settings.nix
-      ../modules/bundles/server.nix
-    ];
-    modules = [ ../hosts/KingsCross ];
-  };
-
+  devVMConfiguration = mkHost "devVM" hosts.devVM;
   devVMQemu = devVMConfiguration.config.system.build.vmWithBootLoader;
+  devVMMeta = import ../hosts/devVM/meta.nix;
 in
 {
-  flake.nixosConfigurations = {
-    miLaptop = miLaptopConfiguration;
-    DiagonAlley = mkNixos {
-      inherit (diagonalAlley) system;
-      baseModules = [
-        ./common/nixpkgs-settings.nix
-        ../modules/bundles/desktop.nix
-      ];
-      modules = [
-        ../hosts/DiagonAlley
-        ../users/seeker
-      ];
-    };
-    devVM = devVMConfiguration;
-    nixos-wsl = wslConfiguration;
-    "King'sCross" = kingsCrossConfiguration;
-    burrow = mkNixos {
-      inherit (burrow) system;
-      baseModules = [
-        ./common/nixpkgs-settings.nix
-        ../modules/bundles/gateway.nix
-      ];
-      modules = [
-        ../hosts/burrow
-        ../users/seeker/burrow.nix
-      ];
-    };
-  };
+  flake.nixosConfigurations = lib.mapAttrs mkHost hosts;
 
   perSystem =
     {
@@ -113,14 +85,14 @@ in
         fi
         ${pkgs.coreutils}/bin/mkdir -p "$state_dir"
         export NIX_DISK_IMAGE="''${NIX_DISK_IMAGE:-$state_dir/devVM.qcow2}"
-        exec ${devVMQemu}/bin/run-${devVM.hostName}-vm "$@"
+        exec ${devVMQemu}/bin/run-${devVMMeta.hostName}-vm "$@"
       '';
     in
     {
-      packages = lib.optionalAttrs (system == devVM.system) {
+      packages = lib.optionalAttrs (system == devVMMeta.system) {
         inherit devVMQemu;
       };
-      apps = lib.optionalAttrs (system == devVM.system) {
+      apps = lib.optionalAttrs (system == devVMMeta.system) {
         devVMQemu = {
           type = "app";
           program = "${runDevVmQemu}";

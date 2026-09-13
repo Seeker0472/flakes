@@ -2,6 +2,8 @@
 {
   imports = [
     ./development.nix
+    # The flake modules providing disko/impermanence options should move into
+    # the profile directories that use them (out of this scope).
     inputs.impermanence.nixosModule
     inputs.disko.nixosModules.disko
     ../profiles/impermanence/btrfs.nix
@@ -9,6 +11,7 @@
     ../profiles/de/hyprland/default.nix
     ../profiles/de/niri/default.nix
     ../profiles/de/options.nix
+    ../profiles/de/common.nix
     ../profiles/programs/gnome-keyring.nix
     ../profiles/programs/kde-connect.nix
     ../profiles/programs/mihomo/mihomo.nix
@@ -19,7 +22,7 @@
     ../profiles/programs/winapps.nix
     ../profiles/secrets/gpg.nix
     ../profiles/system/core/virtualization.nix
-    ../profiles/system/hardware/intel.nix
-    ../profiles/system/hardware/laptop.nix
+    # hardware/intel.nix and hardware/laptop.nix are imported unconditionally
+    # by base-system.nix and gate themselves on machine.cpu / machine.type.
   ];
 }

@@ -13,16 +13,6 @@ lib.mkIf config.programs.fish.enable {
       function fish_greeting; end
       set -g fish_key_bindings fish_vi_key_bindings
       # set -g VIRTUAL_ENV_DISABLE_PROMPT 1
-
-      # --- for yazi ---
-      function y
-        set tmp (mktemp -t "yazi-cwd.XXXXXX")
-        yazi $argv --cwd-file="$tmp"
-        if set cwd (command cat -- "$tmp"); and [ -n "$cwd" ]; and [ "$cwd" != "$PWD" ]
-          builtin cd -- "$cwd"
-        end
-        rm -f -- "$tmp"
-      end
     '';
     shellAliases = {
       nfp = "nix-shell --run fish -p";
@@ -46,8 +36,13 @@ lib.mkIf config.programs.fish.enable {
             return 1
         end
       '';
+      # Restart a process via Hyprland; requires hyprctl (Hyprland session).
       rh = ''
         set -l process $argv[1]
+        if not type -q hyprctl
+            echo "rh: hyprctl not found; start '$process' manually"
+            return 1
+        end
         pkill "$process"
         echo "starting: $process"
         hyprctl dispatch exec "$process"
@@ -75,10 +70,8 @@ lib.mkIf config.programs.fish.enable {
       # { name = "cman"; src = pkgs.fishPlugins.colored-man-pages.src; } # no use
     ];
   };
-  home.packages = with pkgs; [
-    # oh-my-fish
-    subversion
-    fd # fzf-fish's dependence
-    grc
+  home.packages = [
+    pkgs.fd # fzf-fish's dependence
+    pkgs.grc
   ];
 }

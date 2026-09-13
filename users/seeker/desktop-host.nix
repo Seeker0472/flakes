@@ -191,7 +191,7 @@ in
         ];
         bindl = lib.mkAfter [
           '', switch:off:Lid Switch, execr, [ $(hyprctl monitors | grep -c "eDP-1") -ne 1 ] && hyprctl keyword monitor eDP-1,2560x1600@120.0,0x237,1.33''
-          '', switch:on:Lid Switch, execr, [ $(hyprctl monitors | grep -c "ID") -ne 1 ] && hyprctl keyword monitor eDP-1,disable''
+          '', switch:on:Lid Switch, execr, [ $(hyprctl monitors | grep -c "eDP-1") -ne 1 ] && hyprctl keyword monitor eDP-1,disable''
         ];
         windowrule = lib.mkAfter [
           "tag +aloha_launcher, match:initial_class ^(AlohaLauncher)$"

@@ -7,8 +7,12 @@
       description = "Enable secret deployment via sops-nix";
     };
     ageKeyPath = lib.mkOption {
-      type = lib.types.path;
-      default = "/home/${config.machine.mainUser}/.config/sops/age/keys.txt";
+      type = lib.types.str;
+      default =
+        let
+          prefix = if config.machine.impermanence.enable then "/persist/home" else "/home";
+        in
+        "${prefix}/${config.machine.mainUser}/.config/sops/age/keys.txt";
       description = "Path to the age key file";
     };
   };

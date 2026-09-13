@@ -5,6 +5,7 @@
   ...
 }:
 let
+  shared = import ../lib/hardened-service.nix;
   domain = "netbird.vps.seekerer.com";
   publicPort = 28443;
   stunPort = 28478;
@@ -42,29 +43,19 @@ in
   sops = {
     age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
 
-    secrets = {
-      netbird_relay_auth_secret = {
-        sopsFile = ./netbird.secrets.yaml;
-        owner = "netbird";
-        group = "netbird";
-      };
-      netbird_datastore_encryption_key = {
-        sopsFile = ./netbird.secrets.yaml;
-        owner = "netbird";
-        group = "netbird";
-      };
-      netbird_idp_session_cookie_encryption_key = {
-        sopsFile = ./netbird.secrets.yaml;
-        owner = "netbird";
-        group = "netbird";
-      };
-      alicloud_access_key = {
-        sopsFile = ./netbird.secrets.yaml;
-      };
-      alicloud_secret_key = {
-        sopsFile = ./netbird.secrets.yaml;
-      };
-    };
+    secrets =
+      # alicloud_access_key / alicloud_secret_key are declared in secrets.nix.
+      lib.genAttrs
+        [
+          "netbird_relay_auth_secret"
+          "netbird_datastore_encryption_key"
+          "netbird_idp_session_cookie_encryption_key"
+        ]
+        (name: {
+          sopsFile = ./netbird.secrets.yaml;
+          owner = "netbird";
+          group = "netbird";
+        });
 
     templates."netbird-config.yaml" = {
       owner = "netbird";
@@ -134,32 +125,8 @@ in
       Restart = "on-failure";
       RestartSec = "5s";
       UMask = "0077";
-
-      AmbientCapabilities = [ ];
-      CapabilityBoundingSet = [ ];
-      LockPersonality = true;
-      MemoryDenyWriteExecute = true;
-      NoNewPrivileges = true;
-      PrivateDevices = true;
-      PrivateTmp = true;
-      ProtectClock = true;
-      ProtectControlGroups = true;
-      ProtectHome = true;
-      ProtectHostname = true;
-      ProtectKernelLogs = true;
-      ProtectKernelModules = true;
-      ProtectKernelTunables = true;
-      ProtectSystem = "strict";
-      RestrictAddressFamilies = [
-        "AF_INET"
-        "AF_INET6"
-        "AF_UNIX"
-      ];
-      RestrictNamespaces = true;
-      RestrictRealtime = true;
-      RestrictSUIDSGID = true;
-      SystemCallArchitectures = "native";
-    };
+    }
+    // shared.serviceConfig;
   };
 
   services = {
@@ -191,18 +158,7 @@ in
       virtualHosts.${domain} = {
         onlySSL = true;
         useACMEHost = domain;
-        listen = [
-          {
-            addr = "0.0.0.0";
-            port = publicPort;
-            ssl = true;
-          }
-          {
-            addr = "[::]";
-            port = publicPort;
-            ssl = true;
-          }
-        ];
+        listen = shared.mkSslListen publicPort;
         root = config.services.netbird.server.dashboard.finalDrv;
 
         extraConfig = ''
@@ -270,21 +226,7 @@ in
   security.acme = {
     acceptTerms = true;
     defaults.email = "gmx472@qq.com";
-    certs.${domain} = {
-      dnsProvider = "alidns";
-      # The VPS cannot reliably query every AliDNS authoritative server over
-      # IPv6. Wait for propagation instead of making issuance depend on that
-      # network path.
-      extraLegoFlags = [
-        "--dns.propagation-wait"
-        "30s"
-      ];
-      credentialFiles = {
-        ALICLOUD_ACCESS_KEY_FILE = config.sops.secrets.alicloud_access_key.path;
-        ALICLOUD_SECRET_KEY_FILE = config.sops.secrets.alicloud_secret_key.path;
-      };
-      group = config.services.nginx.group;
-    };
+    certs.${domain} = shared.mkAlidnsCert { inherit config; };
   };
 
   networking.firewall = {

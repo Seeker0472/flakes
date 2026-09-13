@@ -6,7 +6,8 @@
 }:
 let
   hostName = osConfig.networking.hostName;
-  sshKeys = import ./ssh-public-keys.nix;
+  helpers = import ./ssh-key-pair.nix { inherit config lib; };
+  inherit (helpers) mkKeyPair sshKeys;
   clientSopsFile = sshKeys.files.${hostName} or null;
   deploySecrets = lib.attrByPath [ "machine" "secrets" "deploy" ] false osConfig;
   ageKeyPath = lib.attrByPath [ "machine" "secrets" "ageKeyPath" ] null osConfig;
@@ -66,20 +67,7 @@ in
           mode = "0644";
         };
       }
-      // lib.optionalAttrs isAdminHost {
-        "ssh-admin-private" = {
-          sopsFile = sshKeys.files.admin;
-          key = "private_key";
-          path = "${config.home.homeDirectory}/.ssh/id_admin";
-          mode = "0600";
-        };
-        "ssh-admin-public" = {
-          sopsFile = sshKeys.files.admin;
-          key = "public_key_unencrypted";
-          path = "${config.home.homeDirectory}/.ssh/id_admin.pub";
-          mode = "0644";
-        };
-      };
+      // lib.optionalAttrs isAdminHost (mkKeyPair "ssh-admin" "admin");
     };
   };
 }

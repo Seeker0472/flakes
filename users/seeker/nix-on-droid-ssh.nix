@@ -1,6 +1,7 @@
-{ config, ... }:
+{ config, lib, ... }:
 let
-  sshKeys = import ./ssh-public-keys.nix;
+  helpers = import ./ssh-key-pair.nix { inherit config lib; };
+  inherit (helpers) mkKeyPair;
   home = config.home.homeDirectory;
   meshHost = user: {
     User = user;
@@ -31,52 +32,19 @@ in
 
   sops.secrets = {
     "ssh-client-private" = {
-      sopsFile = sshKeys.files.miLaptop;
+      sopsFile = helpers.sshKeys.files.miLaptop;
       key = "private_key";
       path = "${home}/.ssh/id_mesh";
       mode = "0600";
     };
     "ssh-client-public" = {
-      sopsFile = sshKeys.files.miLaptop;
+      sopsFile = helpers.sshKeys.files.miLaptop;
       key = "public_key_unencrypted";
       path = "${home}/.ssh/id_mesh.pub";
       mode = "0644";
     };
-    "ssh-external-private" = {
-      sopsFile = sshKeys.files.external;
-      key = "private_key";
-      path = "${home}/.ssh/id_external";
-      mode = "0600";
-    };
-    "ssh-external-public" = {
-      sopsFile = sshKeys.files.external;
-      key = "public_key_unencrypted";
-      path = "${home}/.ssh/id_external.pub";
-      mode = "0644";
-    };
-    "ssh-github-private" = {
-      sopsFile = sshKeys.files.github;
-      key = "private_key";
-      path = "${home}/.ssh/id_github";
-      mode = "0600";
-    };
-    "ssh-github-public" = {
-      sopsFile = sshKeys.files.github;
-      key = "public_key_unencrypted";
-      path = "${home}/.ssh/id_github.pub";
-      mode = "0644";
-    };
-    "ssh-admin-private" = {
-      sopsFile = sshKeys.files.admin;
-      key = "private_key";
-      path = "${home}/.ssh/id_admin";
-      mode = "0600";
-    };
-    "ssh-admin-public" = {
-      sopsFile = sshKeys.files.admin;
-      key = "public_key_unencrypted";
-      path = "${home}/.ssh/id_admin.pub";
-      mode = "0644";
-    };
-  };
+  }
+  // mkKeyPair "ssh-external" "external"
+  // mkKeyPair "ssh-github" "github"
+  // mkKeyPair "ssh-admin" "admin";
 }

@@ -5,12 +5,7 @@
   ...
 }:
 let
-  hyprlandEnabled = lib.attrByPath [
-    "machine"
-    "de"
-    "hyprland"
-    "enable"
-  ] false osConfig;
+  hyprlandEnabled = (import ../../enabled.nix lib osConfig);
   slurp = "${pkgs.slurp}/bin/slurp";
   grim = "${pkgs.grim}/bin/grim";
   wl-copy = "${pkgs.wl-clipboard}/bin/wl-copy";
@@ -19,10 +14,13 @@ let
   brightnessctl = "${pkgs.brightnessctl}/bin/brightnessctl";
   playerctl = "${pkgs.playerctl}/bin/playerctl";
   rm = "${pkgs.coreutils}/bin/rm";
+  mkdir = "${pkgs.coreutils}/bin/mkdir";
+  mktemp = "${pkgs.coreutils}/bin/mktemp";
 
   screenshootScript = pkgs.writeShellScriptBin "screenshoot" ''
-    # TMP_FILE=$(mktemp --suffix=.png)
-    TMP_FILE=/tmp/screenshot.png
+    SHOT_DIR=/tmp/screenshots
+    ${mkdir} -p "$SHOT_DIR"
+    TMP_FILE=$(${mktemp} "$SHOT_DIR/screenshot-XXXXXX.png")
 
     GEOMETRY=$(${slurp})
 
@@ -37,15 +35,14 @@ let
     if ${grim} -g "$GEOMETRY" "$TMP_FILE"; then
         ${wl-copy} --type image/png < "$TMP_FILE"
         ${notify-send} "Area Screenshot Taken" "Screenshot copied to clipboard,click to edit." --icon="$TMP_FILE" --category=screenshoot
-        # ${rm} "$TMP_FILE"
         exit 0
     else
+        ${rm} -f "$TMP_FILE"
         ${notify-send} -u critical "Screenshot Failed" "Could not capture screen area."
-        # ${rm} "$TMP_FILE"
         exit 1
     fi
   '';
-  wpaperctl = "${pkgs.wpaperd}/bin/wpaperctl";
+  wallpaperQuote = import ../../wallpaper-quote.nix { inherit pkgs; };
 in
 {
   config = lib.mkIf hyprlandEnabled {
@@ -60,11 +57,11 @@ in
         "$mainMod CONTROL, M, exec, ${pkgs.hyprlock}/bin/hyprlock"
         "$mainMod, R, exec, $menu"
 
-        # Hitokoto & Wallpaper (Refactored to stable service)
-        '', XF86Tools, exec, ${wpaperctl} next-wallpaper; notify-send --category=hitokoto -t 1 "$(curl -sk https://hitokoto.mayx.eu.org/ | jq -r '"\(.hitokoto)\n—— 《\(.from)》"')"''
-        ''SHIFT, XF86Tools, exec, ${wpaperctl} next-wallpaper; notify-send --category=hitokoto -t 1 "$(curl -sk https://hitokoto.mayx.eu.org/?c=a | jq -r '"\(.hitokoto)\n—— 《\(.from)》"')"''
-        "CONTROL, XF86Tools, exec, ${wpaperctl} next-wallpaper"
-        ''CONTROL SHIFT, XF86Tools, exec, ${wpaperctl} next-wallpaper; notify-send --category=hitokoto -t 1 "$(curl -sk https://v1.hitokoto.mangofanfan.cn/?c=a | jq -r '"\(.hitokoto)\n—— 《\(.from)》"')"''
+        # Hitokoto & Wallpaper (shared wallpaper-quote helper)
+        ", XF86Tools, exec, ${lib.getExe wallpaperQuote} default"
+        "SHIFT, XF86Tools, exec, ${lib.getExe wallpaperQuote} anime"
+        "CONTROL, XF86Tools, exec, ${lib.getExe wallpaperQuote} none"
+        "CONTROL SHIFT, XF86Tools, exec, ${lib.getExe wallpaperQuote} alternate"
 
         ", mouse:275, workspace, e+1"
         ", mouse:276, workspace, e-1"
@@ -119,32 +116,9 @@ in
         "$mainMod, J, movefocus, d"
         "$mainMod, TAB, cyclenext"
 
-        # Switch workspaces [0-9]
-        "$mainMod, 1, workspace, 1"
-        "$mainMod, 2, workspace, 2"
-        "$mainMod, 3, workspace, 3"
-        "$mainMod, 4, workspace, 4"
-        "$mainMod, 5, workspace, 5"
-        "$mainMod, 6, workspace, 6"
-        "$mainMod, 7, workspace, 7"
-        "$mainMod, 8, workspace, 8"
-        "$mainMod, 9, workspace, 9"
-
         # Special workspaces
         "$mainMod, C, workspace, 200"
 
-        # "$mainMod, G, togglespecialworkspace, waydroid"
-
-        # Move active window to a workspace
-        "$mainMod SHIFT, 1, movetoworkspace, 1"
-        "$mainMod SHIFT, 2, movetoworkspace, 2"
-        "$mainMod SHIFT, 3, movetoworkspace, 3"
-        "$mainMod SHIFT, 4, movetoworkspace, 4"
-        "$mainMod SHIFT, 5, movetoworkspace, 5"
-        "$mainMod SHIFT, 6, movetoworkspace, 6"
-        "$mainMod SHIFT, 7, movetoworkspace, 7"
-        "$mainMod SHIFT, 8, movetoworkspace, 8"
-        "$mainMod SHIFT, 9, movetoworkspace, 9"
         "$mainMod SHIFT, C, movetoworkspace, 200"
         "$mainMod SHIFT, V, movetoworkspace, 201"
 
@@ -185,7 +159,13 @@ in
         "$mainMod SHIFT, A, exec, ${lib.getExe screenshootScript}"
         "$mainMod SHIFT ALT, A, exec, grim"
         ", Print, exec, ${lib.getExe screenshootScript}"
-      ];
+      ]
+      ++ lib.flatten (
+        map (i: [
+          "$mainMod, ${toString i}, workspace, ${toString i}"
+          "$mainMod SHIFT, ${toString i}, movetoworkspace, ${toString i}"
+        ]) (lib.range 1 9)
+      );
 
       # Mouse bindings
       bindm = [

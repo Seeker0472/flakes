@@ -19,9 +19,8 @@
     };
   };
   # Select internationalisation properties.
-  i18n.defaultLocale = "en_HK.UTF-8";
+  i18n.defaultLocale = lib.mkDefault "en_HK.UTF-8";
 
-  nixpkgs.config.permittedInsecurePackages = [ ];
   #Make Windows Happy
   # A better way is to let windows use UTC time
   # time.hardwareClockInLocalTime = true;

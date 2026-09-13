@@ -194,9 +194,9 @@ binds {
     Mod+Shift+M repeat=false hotkey-overlay-title="Hibernate" { spawn "@systemctl@" "hibernate"; }
     Mod+Ctrl+M repeat=false hotkey-overlay-title="Lock Session" { spawn "@loginctl@" "lock-session"; }
 
-    Mod+R repeat=false hotkey-overlay-title="Open Applications" { spawn "@aloha@" "--root" "apps"; }
-    Mod+P repeat=false hotkey-overlay-title="Open Commands" { spawn "@aloha@" "--root" "commands"; }
-    Mod+Shift+P repeat=false hotkey-overlay-title="Open Power Menu" { spawn "@aloha@" "--root" "power"; }
+    Mod+R repeat=false hotkey-overlay-title="Open Applications" { spawn "aloha" "--root" "apps"; }
+    Mod+P repeat=false hotkey-overlay-title="Open Commands" { spawn "aloha" "--root" "commands"; }
+    Mod+Shift+P repeat=false hotkey-overlay-title="Open Power Menu" { spawn "aloha" "--root" "power"; }
 
     Mod+Return repeat=false hotkey-overlay-title="Open Terminal" { spawn "@kitty@"; }
     Mod+Space repeat=false hotkey-overlay-title="Open Floating Terminal" { spawn "@kitty@" "--class" "FG"; }

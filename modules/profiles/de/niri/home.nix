@@ -25,7 +25,7 @@ let
       shift
 
       windows="$(niri msg --json windows 2>/dev/null || printf '[]')"
-      window_id="$(${pkgs.jq}/bin/jq -r --arg pattern "$app_id_pattern" \
+      window_id="$(jq -r --arg pattern "$app_id_pattern" \
         '[.[] | select((.app_id // "") | test($pattern; "i"))][0].id // empty' \
         <<< "$windows" 2>/dev/null || true)"
 
@@ -105,44 +105,22 @@ let
     '';
   };
 
-  wallpaperQuote = pkgs.writeShellApplication {
-    name = "niri-wallpaper-quote";
-    runtimeInputs = [
-      pkgs.curl
-      pkgs.jq
-      pkgs.libnotify
-      pkgs.wpaperd
-    ];
-    text = ''
-      case "''${1:-default}" in
-        default) url="https://hitokoto.mayx.eu.org/" ;;
-        anime) url="https://hitokoto.mayx.eu.org/?c=a" ;;
-        alternate) url="https://v1.hitokoto.mangofanfan.cn/?c=a" ;;
-        *) echo "unknown quote source: $1" >&2; exit 2 ;;
-      esac
+  wallpaperQuote = import ../wallpaper-quote.nix { inherit pkgs; };
 
-      wpaperctl next-wallpaper
-      response="$(curl -fsSk "$url" || true)"
-      message="$(jq -r 'if type == "object" and .hitokoto then .hitokoto + "\n-- " + (.from // "unknown") else empty end' <<< "$response" 2>/dev/null || true)"
-      if [[ -n "$message" ]]; then
-        notify-send --category=hitokoto -t 6000 "$message"
-      fi
-    '';
-  };
-
+  monitor = (osConfig.machine.de.niri.monitor or { });
   initialMonitorConfig = pkgs.writeText "niri-monitor.kdl" (
     lib.optionalString (osConfig.machine.type == "laptop") ''
-      output "eDP-1" {
-          mode "2560x1600"
-          scale 1.333333
-          position x=0 y=0
+      output "${monitor.output or "eDP-1"}" {
+          mode "${monitor.mode or "2560x1600"}"
+          scale ${toString (monitor.scale or 1.333333)}
+          position x=${toString (monitor.position.x or 0)} y=${toString (monitor.position.y or 0)}
       }
     ''
   );
 
-  swaylockPackage = pkgs.swaylock-effects;
-  lockCommand = "${pkgs.procps}/bin/pidof swaylock || ${lib.getExe swaylockPackage} -f";
-  onBattery = "${pkgs.acpi}/bin/acpi -a | ${pkgs.gnugrep}/bin/grep -q off-line";
+  idle = import ../idle-common.nix { inherit lib pkgs; };
+  lockCommand = idle.swaylockCommand;
+  onBattery = idle.onBattery;
 
   niriConfig = pkgs.replaceVars ./config.kdl {
     focusOrSpawn = lib.getExe focusOrSpawn;
@@ -152,7 +130,6 @@ let
     nwgDisplays = lib.getExe pkgs.nwg-displays;
     resizeAndCenter = lib.getExe resizeAndCenter;
     wallpaperQuote = lib.getExe wallpaperQuote;
-    aloha = "aloha";
     brightnessctl = lib.getExe pkgs.brightnessctl;
     cliphist = lib.getExe pkgs.cliphist;
     kitty = lib.getExe pkgs.kitty;
@@ -167,11 +144,9 @@ let
     quickshellStartup = lib.optionalString (deCfg.quickshell.enable or false) ''
       spawn-at-startup "${lib.getExe pkgs.quickshell}" "--config" "niri-shell"
     '';
-    waybarStartup =
-      lib.optionalString ((deCfg.waybar.enable or false) && !(deCfg.quickshell.enable or false))
-        ''
-          spawn-at-startup "${lib.getExe pkgs.waybar}"
-        '';
+    waybarStartup = lib.optionalString (deCfg.waybar.enable or false) ''
+      spawn-at-startup "${lib.getExe pkgs.waybar}"
+    '';
     quickshellToggle = lib.optionalString (deCfg.quickshell.enable or false) ''
       Mod+Shift+Space repeat=false hotkey-overlay-title="Toggle Control Center" { spawn "${lib.getExe pkgs.quickshell}" "ipc" "-c" "niri-shell" "call" "shell" "toggle"; }
     '';
@@ -201,7 +176,7 @@ in
 
     programs.swaylock = {
       enable = true;
-      package = swaylockPackage;
+      package = idle.swaylockPackage;
       settings = {
         image = ../wallpaper/nix-wallpaper-moonscape.png;
         scaling = "fill";
@@ -263,16 +238,16 @@ in
         };
         timeouts = [
           {
-            timeout = 240;
-            command = "${onBattery} && ${pkgs.libnotify}/bin/notify-send Zzz";
+            timeout = idle.timeouts.notify;
+            command = "${onBattery} && ${idle.zzzNotify}";
           }
           {
-            timeout = 300;
-            command = "${onBattery} && ${pkgs.systemd}/bin/loginctl lock-session";
+            timeout = idle.timeouts.lock;
+            command = "${onBattery} && ${idle.lockSession}";
           }
           {
-            timeout = 600;
-            command = "${onBattery} && ${pkgs.systemd}/bin/systemctl suspend-then-hibernate";
+            timeout = idle.timeouts.suspend;
+            command = "${onBattery} && ${idle.suspendThenHibernate}";
           }
         ];
       };

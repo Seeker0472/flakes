@@ -7,7 +7,7 @@
 }:
 let
   cfg = config.machine.programs.winapps;
-  system = pkgs.system;
+  system = pkgs.stdenv.hostPlatform.system;
   winapps = inputs.winapps;
 in
 {

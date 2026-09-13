@@ -17,3 +17,4 @@ docs/*
 .humanize/pr-loop/
 .humanize/rlcr/
 .humanize/skill/
+modules/profiles/input/conf/cached_layouts

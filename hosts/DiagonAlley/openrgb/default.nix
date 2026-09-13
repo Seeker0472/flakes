@@ -1,4 +1,5 @@
 {
+  config,
   lib,
   pkgs,
   ...
@@ -41,7 +42,7 @@ in
       /var/lib/OpenRGB/sizes.ors
   '';
 
-  home-manager.users.seeker = {
+  home-manager.users.${config.machine.mainUser} = {
     programs.niri-shell.rgbControl = {
       enable = true;
       package = controller;

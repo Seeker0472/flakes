@@ -7,7 +7,6 @@
 let
   cfg = config.machine.programs.netbird;
   client = config.services.netbird.clients.default;
-  persistDir = lib.attrByPath [ "machine" "btrfs" "impermanence" "persistdir" ] "/persist" config;
 in
 {
   options.machine.programs.netbird = {
@@ -39,14 +38,16 @@ in
           };
         };
 
-        resolved.enable = true;
+        # mkDefault so other modules (e.g. mihomo tun mode) can win the
+        # priority over resolved without a priority conflict.
+        resolved.enable = lib.mkDefault true;
       };
 
       users.users.${config.machine.mainUser}.extraGroups = [ client.user.group ];
     }
     // lib.optionalAttrs (options ? environment.persistence) {
       environment.persistence = lib.mkIf config.machine.impermanence.enable {
-        "${persistDir}".directories = [ client.dir.state ];
+        "${config.machine.btrfs.impermanence.persistdir}".directories = [ client.dir.state ];
       };
     }
   );

@@ -11,13 +11,24 @@ let
     package = pkgs.bibata-cursors;
     size = 32;
   };
-  deCfg = lib.attrByPath [ "machine" "de" ] { } osConfig;
-  notificationDaemon = deCfg.notificationDaemon or "swaync";
-  compositorEnabled = (deCfg.hyprland.enable or false) || (deCfg.niri.enable or false);
+  deCfg = osConfig.machine.de;
+  notificationDaemon = deCfg.notificationDaemon;
+  compositorEnabled = deCfg.hyprland.enable || deCfg.niri.enable;
+
+  # kitty --class values for the floating / global / right-top terminal
+  # instances, matched exactly by the windowrules below.
+  kittyClass = {
+    floatTerm = "FG";
+    globalTerm = "GT";
+    rightTopTerm = "RT";
+  };
 in
 {
   imports = [
-    ../profiles/de/map.nix
+    # Declares machine.de options on the Home Manager side so osConfig reads
+    # type-check instead of relying on attribute fallbacks.
+    ../profiles/de/options.nix
+    ../profiles/de/config-files.nix
     ../profiles/de/quickshell/default.nix
     ../profiles/de/waybar/default.nix
     ../profiles/de/niri/home.nix
@@ -28,7 +39,7 @@ in
     ../profiles/de/hyprland/conf/win_ws.nix
     ../profiles/de/hyprland/conf/hypridle.nix
     ../profiles/de/hyprland/conf/autostart.nix
-    ../profiles/input/map.nix
+    ../profiles/input/fcitx5.nix
     ../profiles/programs/home/kitty.nix
     ../profiles/programs/home/zed.nix
     ./kde-connect.nix
@@ -36,23 +47,23 @@ in
   ];
 
   config = lib.mkMerge [
-    (lib.mkIf (deCfg.hyprland.enable or false) {
+    (lib.mkIf deCfg.hyprland.enable {
       wayland.windowManager.hyprland = {
         enable = true;
         settings = {
           "$terminal" = "${pkgs.kitty}/bin/kitty";
-          "$floatTerminal" = "${pkgs.kitty}/bin/kitty --class FG";
+          "$floatTerminal" = "${pkgs.kitty}/bin/kitty --class ${kittyClass.floatTerm}";
           exec-once = [
             "hyprctl setcursor ${customCursor.name} ${builtins.toString customCursor.size}"
           ];
           windowrule = [
-            "tag +float_term,match:initial_class (.*F.*) ,match:initial_title ^(kitty)$"
+            "tag +float_term, match:initial_class (${kittyClass.floatTerm}), match:initial_title ^(kitty)$"
             "float on, match:tag float_term*"
             "center on, match:tag float_term*"
             "size (monitor_w*0.7) (monitor_h*0.7), match:tag float_term*"
-            "tag +global_term ,match:initial_class (.*G.*), match:initial_title ^(kitty)$"
+            "tag +global_term, match:initial_class (${kittyClass.globalTerm}), match:initial_title ^(kitty)$"
             "pin on, match:tag global_term*"
-            "tag +right_top_term, match:initial_class (RT.*), match:initial_title ^(kitty)$"
+            "tag +right_top_term, match:initial_class (${kittyClass.rightTopTerm}), match:initial_title ^(kitty)$"
             "size (monitor_w*0.6) (monitor_h*0.7), match:tag right_top_term*"
             "float on, match:tag right_top_term*"
             "move (monitor_w-window_w) 30, match:tag right_top_term*"
@@ -63,14 +74,14 @@ in
             "workspace special:qq, match:class ^(QQ)$"
             "workspace special:music, match:class (com.gitee.gmg137.NeteaseCloudMusicGtk4)"
             "workspace special:obsidian, match:class (obsidian)"
-            "workspace special:zed,match:class (dev.zed.Zed)"
+            "workspace special:zed, match:class (dev.zed.Zed)"
             "workspace special:zotero, match:class (Zotero)"
           ];
           workspace = [
             "special:qq, on-created-empty: [ ] qq"
             "special:music, on-created-empty: [ ] netease-cloud-music-gtk4"
             "special:obsidian, on-created-empty: [ ] obsidian"
-            "special:zed, on-created-empty:[ ] zeditor"
+            "special:zed, on-created-empty: [ ] zeditor"
             "special:zotero, on-created-empty: [ ] zotero"
             "201, defaultName:󰨞, on-created-empty: [ ] code"
           ];

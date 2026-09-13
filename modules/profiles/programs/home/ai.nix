@@ -58,9 +58,9 @@ in
         sessionVariables = sessionUrls;
       };
     })
-    (lib.optionalAttrs (options ? systemd.user.sessionVariables) {
+    {
       systemd.user.sessionVariables = lib.mkIf cfg.enable sessionUrls;
-    })
+    }
     (lib.optionalAttrs ((options ? home.persistence) && persistDir != null) {
       home.persistence.${persistDir}.directories = lib.mkIf (cfg.enable && impermanenceEnabled) [
         {

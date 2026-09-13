@@ -30,7 +30,6 @@
 
     secrets = {
       deploy = true;
-      ageKeyPath = "/home/seeker/.config/sops/age/keys.txt";
     };
 
     services.openssh = {

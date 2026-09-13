@@ -5,6 +5,14 @@
   ...
 }:
 {
+  options.machine.hardware.tlp.usbDenylist = lib.mkOption {
+    type = lib.types.listOf lib.types.str;
+    default = [
+      "320f:5088"
+      "046d:c52b"
+    ];
+    description = "USB device VID:PID pairs denied autosuspend by TLP.";
+  };
   config = lib.mkIf (config.machine.type == "laptop") {
     services.logind.settings.Login = {
       # don't shutdown when power button is short-pressed
@@ -47,7 +55,7 @@
         CPU_ENERGY_PERF_POLICY_ON_AC = "performance";
         CPU_ENERGY_PERF_POLICY_ON_BAT = "power";
         # no suspend for mouse and keyboard
-        USB_DENYLIST = "320f:5088 046d:c52b";
+        USB_DENYLIST = lib.concatStringsSep " " config.machine.hardware.tlp.usbDenylist;
 
         # USB_AUTOSUSPEND = 0;
       };

@@ -1,9 +1,8 @@
 { inputs, ... }:
 let
   system = "aarch64-linux";
-  pkgs = import inputs.nixpkgs {
-    inherit system;
-    config.allowUnfree = true;
+  pkgs = import ./common/mk-pkgs.nix {
+    inherit inputs system;
     overlays = [ inputs.nix-on-droid.overlays.default ];
   };
 

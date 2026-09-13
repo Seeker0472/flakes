@@ -1,5 +1,6 @@
 { pkgs, ... }:
 let
+  user = "seeker";
   sshKeys = import ../../users/seeker/ssh-public-keys.nix;
 in
 {
@@ -8,11 +9,11 @@ in
 
   wsl = {
     enable = true;
-    defaultUser = "seeker";
+    defaultUser = user;
   };
 
   programs.fish.enable = true;
-  users.users.seeker = {
+  users.users.${user} = {
     extraGroups = [ "wheel" ];
     shell = pkgs.fish;
     openssh.authorizedKeys.keys = sshKeys.authorizedKeys;
@@ -22,7 +23,6 @@ in
     secrets = {
       deploy = true;
       nixConfig.enable = true;
-      ageKeyPath = "/home/seeker/.config/sops/age/keys.txt";
     };
     services.openssh = {
       enable = true;

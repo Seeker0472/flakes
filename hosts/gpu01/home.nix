@@ -1,3 +1,5 @@
+# Standalone home-manager target for the gpu01 cluster login node (see
+# outputs/home-configurations.nix); this is not a NixOS host module.
 {
   config,
   lib,
@@ -15,7 +17,7 @@ in
 
   home = {
     username = "seeker4721";
-    homeDirectory = "/home/seeker4721";
+    homeDirectory = "/home/${config.home.username}";
   };
 
   machine.programs.nixvim.development.enable = true;

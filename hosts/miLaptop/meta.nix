@@ -9,12 +9,9 @@
     impermanence.enable = true;
 
     de = {
-      hyprland.enable = false;
       niri.enable = true;
       quickshell.enable = true;
-      waybar.enable = false;
       wofi.enable = true;
-      notificationDaemon = "swaync";
       wpaperd.enable = true;
     };
 
@@ -36,13 +33,11 @@
       gpg.enable = true;
       thunar.enable = true;
       steam.enable = true;
-      tailscale.enable = false;
     };
 
     secrets = {
       deploy = true;
       nixConfig.enable = true;
-      ageKeyPath = "/persist/home/seeker/.config/sops/age/keys.txt";
     };
 
     services.openssh = {

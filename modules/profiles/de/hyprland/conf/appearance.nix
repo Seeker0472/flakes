@@ -9,12 +9,7 @@
   ...
 }:
 let
-  hyprlandEnabled = lib.attrByPath [
-    "machine"
-    "de"
-    "hyprland"
-    "enable"
-  ] false osConfig;
+  hyprlandEnabled = (import ../../enabled.nix lib osConfig);
 in
 {
   config = lib.mkIf hyprlandEnabled {

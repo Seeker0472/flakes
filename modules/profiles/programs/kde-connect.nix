@@ -3,17 +3,20 @@
   config,
   ...
 }:
+let
+  kdeConnectPorts = [
+    {
+      from = 1714;
+      to = 1764;
+    }
+  ];
+in
 {
   options.machine.programs.kdeconnect.enable = lib.mkEnableOption "KDE Connect";
   config = lib.mkIf config.machine.programs.kdeconnect.enable {
-    networking.firewall = rec {
-      allowedTCPPortRanges = [
-        {
-          from = 1714;
-          to = 1764;
-        }
-      ];
-      allowedUDPPortRanges = allowedTCPPortRanges;
+    networking.firewall = {
+      allowedTCPPortRanges = kdeConnectPorts;
+      allowedUDPPortRanges = kdeConnectPorts;
     };
   };
 }

@@ -30,29 +30,31 @@
         #daemon.settings = { data-root = "/etc/docker"; };
       };
     })
-    (lib.mkIf config.machine.virtualization.libvirt.enable {
-      virtualisation.libvirtd.enable = true;
-      virtualisation.libvirtd.qemu.vhostUserPackages = [ pkgs.virtiofsd ];
-      programs.virt-manager.enable = true;
+    (lib.mkIf config.machine.virtualization.libvirt.enable (
+      let
+        persistentStateMounts = [
+          "/var/lib/systemd"
+          "/var/lib/libvirt"
+        ];
+      in
+      {
+        virtualisation.libvirtd.enable = true;
+        virtualisation.libvirtd.qemu.vhostUserPackages = [ pkgs.virtiofsd ];
+        programs.virt-manager.enable = true;
 
-      # Both libvirt's encrypted secret and systemd's host key live in
-      # persistent state on this impermanent host.
-      systemd.services.virt-secret-init-encryption.unitConfig.RequiresMountsFor = [
-        "/var/lib/systemd"
-        "/var/lib/libvirt"
-      ];
-      systemd.services.libvirtd.unitConfig.RequiresMountsFor = [
-        "/var/lib/systemd"
-        "/var/lib/libvirt"
-      ];
+        # Both libvirt's encrypted secret and systemd's host key live in
+        # persistent state on this impermanent host.
+        systemd.services.virt-secret-init-encryption.unitConfig.RequiresMountsFor = persistentStateMounts;
+        systemd.services.libvirtd.unitConfig.RequiresMountsFor = persistentStateMounts;
 
-      users.extraGroups.libvirtd.members = [ config.machine.mainUser ];
+        users.extraGroups.libvirtd.members = [ config.machine.mainUser ];
 
-      environment.systemPackages = with pkgs; [
-        dnsmasq
-        libguestfs
-        qemu
-      ];
-    })
+        environment.systemPackages = with pkgs; [
+          dnsmasq
+          libguestfs
+          qemu
+        ];
+      }
+    ))
   ];
 }

@@ -1,9 +1,8 @@
-{ inputs, ... }:
+{ ... }:
 {
   imports = [
-    inputs.sops-nix.homeManagerModules.sops
+    ./hm-base.nix
     ./home.nix
-    ./ai-secrets.nix
     ./nix-on-droid-ssh.nix
   ];
 }

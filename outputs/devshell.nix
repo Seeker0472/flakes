@@ -46,30 +46,23 @@ in
     in
     {
       pre-commit.settings.hooks.nixfmt.enable = true;
-      checks.quickshell = quickshellChecks;
-      formatter = pkgs.nixfmt-tree;
-      packages = lib.optionalAttrs (system == "x86_64-linux") {
-        devContainerImage =
-          let
-            imagePkgs = import ./common/mk-pkgs.nix { inherit inputs system; };
-          in
-          import ./dev-container-image.nix {
-            inherit inputs;
-            pkgs = imagePkgs;
-          };
+      # qmllint/qmltestrunner only run on x86_64-linux, matching devContainerImage.
+      checks = lib.optionalAttrs (system == "x86_64-linux") {
+        quickshell = quickshellChecks;
       };
+      formatter = pkgs.nixfmt-tree;
       devShells.default = pkgs.mkShell {
-        packages = with pkgs; [
-          git
-          vim
-          neovim
-          nixfmt
-          sops
-          age
-          python3
-          qt6.qtdeclarative
+        packages = [
+          pkgs.git
+          pkgs.vim
+          pkgs.neovim
+          pkgs.nixfmt
+          pkgs.sops
+          pkgs.age
+          pkgs.python3
+          pkgs.qt6.qtdeclarative
         ];
-        shellHook = "${config.pre-commit.shellHook}";
+        shellHook = config.pre-commit.shellHook;
       };
     };
 }

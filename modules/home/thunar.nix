@@ -3,22 +3,10 @@
   osConfig,
   ...
 }:
-let
-  thunarEnabled = lib.attrByPath [
-    "machine"
-    "programs"
-    "thunar"
-    "enable"
-  ] false osConfig;
-  hyprlandEnabled = lib.attrByPath [
-    "machine"
-    "de"
-    "hyprland"
-    "enable"
-  ] false osConfig;
-in
 {
-  config = lib.mkIf (thunarEnabled && hyprlandEnabled) {
+  # These rules only target Hyprland; Hyprland's own enablement is already
+  # covered by desktop.nix, so only the thunar flag is needed here.
+  config = lib.mkIf osConfig.machine.programs.thunar.enable {
     wayland.windowManager.hyprland.settings = {
       "$fileManager" = "thunar";
       windowrule = [
