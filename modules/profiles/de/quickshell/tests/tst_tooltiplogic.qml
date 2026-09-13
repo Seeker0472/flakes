@@ -65,4 +65,14 @@ TestCase {
         verify(!TooltipLogic.dismissedAfterUpdate(dismissed, target, true, true))
         verify(!TooltipLogic.dismissedAfterUpdate(dismissed, {}, true, true))
     }
+
+    function test_pointerLeaveDismissesStaleFocus() {
+        var target = {}
+        var hovered = request({}, target, 1, true, true, false)
+        var keyboardOnly = request({}, target, 2, false, true, false)
+
+        verify(TooltipLogic.dismissedAfterUpdate(hovered, target, false, true))
+        verify(!TooltipLogic.dismissedAfterUpdate(keyboardOnly, target, false, true))
+        verify(!TooltipLogic.dismissedAfterUpdate(hovered, target, false, false))
+    }
 }

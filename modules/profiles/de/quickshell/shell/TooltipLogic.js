@@ -27,8 +27,15 @@ function select(requests) {
 }
 
 function dismissedAfterUpdate(previous, target, hovered, focused) {
-    if (!previous || !previous.dismissed) return false
-    if (previous.target !== target) return false
+    if (!previous || previous.target !== target) return false
+
+    var dismissed = Boolean(previous.dismissed)
+    // Pointer leave should hide the tooltip even if mouse-initiated focus remains.
+    // Keyboard-only focus (never hovered) stays eligible.
+    if (previous.hovered && !hovered)
+        dismissed = true
+
+    if (!dismissed) return false
     if (!hovered && !focused) return false
     // A new pointer entry is a fresh hover, even if keyboard focus remains.
     if (hovered && !previous.hovered) return false

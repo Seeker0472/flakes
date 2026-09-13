@@ -110,10 +110,7 @@ Item {
                     hoverEnabled: true
                     acceptedButtons: Qt.LeftButton
                     cursorShape: Qt.PointingHandCursor
-                    onPressed: {
-                        workspaceTooltip.dismiss()
-                        workspaceCell.forceActiveFocus(Qt.MouseFocusReason)
-                    }
+                    onPressed: workspaceTooltip.dismiss()
                     onClicked: ShellState.focusWorkspace(Number(modelData.idx || 1), modelData.output || root.outputName)
                 }
 
@@ -124,7 +121,7 @@ Item {
                     focused: workspaceCell.activeFocus
                     delay: 450
                     text: {
-                        var state = focused ? "focused" : (activeOnOutput ? "active" : "inactive")
+                        var state = workspaceCell.focused ? "focused" : (activeOnOutput ? "active" : "inactive")
                         if (empty) state += ", empty"
                         if (urgent) state += ", urgent"
                         return "Workspace " + label + " · " + state + (modelData.output ? "\n" + modelData.output : "")
