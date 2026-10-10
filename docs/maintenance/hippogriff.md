@@ -38,6 +38,10 @@ activation loses the SSH connection; rollback is also the U-Boot menu's
 
 `--dry-activate` runs the activation without setting the profile.
 
+The node's `hostname` in `flake.deploy` is only the current DHCP lease; pass
+`--hostname <address>` when it moves (TODO: NetBird overlay address, see
+`.todo.md`).
+
 ### Fallback: manual push and activation
 
 The flow used before deploy-rs was wired up stays valid, and is the way in

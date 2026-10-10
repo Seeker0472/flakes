@@ -16,6 +16,10 @@ activates with `switch-to-configuration switch`; its magicRollback watches the
 connection and rolls the profile back when a deploy cuts it. `miLaptop` and
 `Hippogriff` prompt for the account's sudo password (`interactiveSudo`).
 
+`miLaptop` and `Hippogriff` have no stable address yet (DHCP, no local DNS
+name): pass `--hostname <address>` when the lease moves, until the NetBird
+overlay addresses land (TODO in `.todo.md`).
+
 ## King'sCross
 
 The VPS configuration is `nixosConfigurations."King'sCross"` and targets

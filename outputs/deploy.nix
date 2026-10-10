@@ -51,10 +51,17 @@ let
   key = "/home/seeker/.ssh/id_admin";
 in
 {
+  # Addressing: King'sCross resolves by name, but miLaptop and Hippogriff are
+  # on DHCP with no local DNS and no usable mDNS name, so their `hostname`
+  # values below are placeholders for the current address. Override per
+  # invocation meanwhile:
+  #   nix run .#deploy-rs -- .#hippogriff --hostname 192.168.x.y
+  # TODO(.todo.md): point both at the NetBird overlay addresses once the
+  # tablet is enrolled and the deploying machines run netbird.
   flake.deploy.nodes = {
     miLaptop = mkNode "x86_64-linux" {
       hostName = "miLaptop";
-      hostname = "miLaptop";
+      hostname = "miLaptop"; # override with --hostname <ip>
       sshUser = "seeker";
       sshOpts = [
         "-i"
@@ -91,7 +98,7 @@ in
 
     hippogriff = mkNode "aarch64-linux" {
       hostName = "Hippogriff";
-      hostname = "192.168.11.132";
+      hostname = "192.168.11.132"; # current lease; override with --hostname <ip>
       sshUser = "seeker";
       sshOpts = [
         "-i"
