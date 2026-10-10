@@ -1,7 +1,7 @@
 { ... }:
 let
-  # Work around https://github.com/NixOS/nixpkgs/issues/471331: both dongle
-  # firmware packages fail to download; ship a placeholder instead.
+  # Work around nixpkgs#471331: these dongle firmware archives currently
+  # fail to download from Microsoft's update catalog.
   mkDummyFirmware =
     prev: name: fileName:
     prev.runCommand "dummy-${name}-firmware" { } ''

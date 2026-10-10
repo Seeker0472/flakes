@@ -6,7 +6,19 @@
 }:
 let
   effectsProfile = "quickshell.json";
-  openrgb = pkgs.openrgb.withPlugins [ pkgs.openrgb-plugin-effects ];
+  # OpenRGB 1.0 uses plugin API 5.  nixpkgs still ships the 1.0rc2
+  # effects plugin (API 4), which OpenRGB silently rejects at startup.
+  effectsPlugin = pkgs.openrgb-plugin-effects.overrideAttrs (_: {
+    version = "1.0";
+    src = pkgs.fetchFromGitLab {
+      owner = "OpenRGBDevelopers";
+      repo = "OpenRGBEffectsPlugin";
+      tag = "release_1.0";
+      hash = "sha256-+LUP/KVKU7taHIOd274dbcaq/uljACTj/y3TUoaf3iM=";
+      fetchSubmodules = true;
+    };
+  });
+  openrgb = pkgs.openrgb.withPlugins [ effectsPlugin ];
   controllerVersion = builtins.hashString "sha256" (
     (builtins.hashFile "sha256" ./controller.py) + (builtins.hashFile "sha256" ./spectrum-cycle.json)
   );

@@ -27,6 +27,7 @@
       };
       netbird.enable = true;
       nixvim.development.enable = true;
+      tailscale.enable = true;
       zed.enable = true;
       gpg.enable = true;
       thunar.enable = true;
