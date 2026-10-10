@@ -64,6 +64,22 @@ only path sops-nix reads.
 
 ## Notes
 
+- Enabled dev-machine services (2026-10-10): GNOME, KDE Connect, mihomo
+  (share/tun/web), NetBird, Docker, GnuPG (pinentry-qt), fcitx5 (wayland,
+  Chinese addons), Zed, kitty, zen-browser, plus the office/media app set
+  (`users/seeker/packages/office.nix`, mpv, netease-cloud-music-gtk, zotero).
+  obsidian, qq and vscode are x86_64-linux only in nixpkgs and cannot be
+  enabled on this host (vscodium is available as an editor substitute).
+- Docker: the port kernel already carries what containers need —
+  `CONFIG_NF_TABLES=y` (built-in, so no nf_tables.ko) with NFT_NAT/NFT_MASQ/
+  NFT_REDIR and nf_nat as modules, bridge/veth/br_netfilter, the built-in
+  overlayfs and cgroups/namespaces/seccomp (verified against the running
+  kernel 2026-10-10; the NixOS firewall is active on the same nftables
+  backend). VXLAN, which `docker network create --driver overlay` and swarm
+  mode need, was the one gap; the port enables it in commit 2987781 and the
+  first system built from the bumped `liuqin` input picks it up. NetBird needs
+  a runtime enrollment (`netbird up --setup-key ...`), mihomo reads its
+  configuration from the sops secret.
 - `/nix/store` comes up read-only from the initrd, but store writes still
   work: after boot, `nix-store --add-fixed` on the tablet succeeded with the
   mount left untouched (verified 2026-10-10), so `nix copy` and the deploy

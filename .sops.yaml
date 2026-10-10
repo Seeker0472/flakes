@@ -108,6 +108,7 @@ creation_rules:
           - *recovery_age
           - *diagonal_alley_age
           - *burrow_age
+          - *hippogriff_age
 
   - path_regex: users/seeker/ai\.secrets\.json$
     unencrypted_suffix: _unencrypted

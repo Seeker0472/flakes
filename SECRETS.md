@@ -11,7 +11,8 @@ and `DiagonAlley` can decrypt their own SSH client key and the shared secrets
 consumed by that host. `DiagonAlley`, `Hippogriff`, and `burrow` also receive
 the administrator SSH key so they retain VPS maintenance access.
 `Hippogriff` additionally consumes the shared external/GitHub keys, the AI
-relay file, the shared nix configuration, and the Taskwarrior pair. `burrow`
+relay file, the shared nix configuration, the Taskwarrior pair, and the shared
+Mihomo configuration. `burrow`
 deliberately does not
 receive the shared external, GitHub, or AI relay credentials.
 `gpu01` has a separate runtime identity, scoped to the shared external and

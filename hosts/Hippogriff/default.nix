@@ -73,6 +73,18 @@ import ../lib/mk-host-module.nix {
 
         hardware.i2c.enable = true;
         zramSwap.enable = true;
+
+        # Input method: the laptop profile carries this block for PC laptops;
+        # the tablet's machine.type is "others", so it is stated here.
+        i18n.inputMethod = {
+          enable = true;
+          type = "fcitx5";
+          fcitx5.waylandFrontend = true;
+          fcitx5.addons = with pkgs; [
+            kdePackages.fcitx5-chinese-addons
+            fcitx5-gtk
+          ];
+        };
       }
     )
   ];

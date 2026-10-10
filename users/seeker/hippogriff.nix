@@ -1,4 +1,4 @@
-{ ... }:
+{ inputs, pkgs, ... }:
 let
   sshKeys = import ./ssh-public-keys.nix;
 in
@@ -22,16 +22,38 @@ in
 
   home-manager = {
     users.seeker = {
-      # The dev-machine profile: identity/tooling and the shared secrets,
-      # without the desktop host's window-manager and media package set.
+      # The dev-machine profile: identity/tooling, the shared secrets, and
+      # the interactive app set requested for the tablet, without the desktop
+      # host's window-manager configuration.
       imports = [
+        inputs.zen-browser.homeModules.beta
         ./hm-base.nix
         ./home.nix
         ./ssh-secrets.nix
         ./taskwarrior-sync.nix
+        ../../modules/profiles/programs/home/kitty.nix
+        ../../modules/profiles/programs/home/zed.nix
+        ../../modules/home/kde-connect.nix
+        ../../modules/profiles/input/fcitx5.nix
       ];
 
-      programs.taskwarrior.enable = true;
+      programs = {
+        taskwarrior.enable = true;
+        kitty.enable = true;
+        zen-browser.enable = true;
+      };
+
+      # Office/document tools plus the players and reference apps from the
+      # desktop host's list. obsidian, qq and vscode are x86_64-linux only in
+      # nixpkgs; the editor/recorder set from packages/media.nix (obs-studio,
+      # gimp, ...) stays out by request.
+      home.packages =
+        (import ./packages/office.nix { inherit pkgs; })
+        ++ (with pkgs; [
+          mpv
+          netease-cloud-music-gtk
+          zotero
+        ]);
     };
   };
 }
