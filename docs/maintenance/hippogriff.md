@@ -69,6 +69,13 @@ $N/nix-env --profile /nix/var/nix/profiles/system --set "$TO"
 systemctl reboot
 ```
 
+When the generation changes the kernel (as the first one carrying the Docker
+NAT targets does), stop after the loader step and reboot: `switch` would
+restart services under the running old kernel first, and a service the old
+kernel cannot run (dockerd without the xt NAT targets) fails the activation,
+which deploy-rs answers with a rollback. The profile and the loader entry are
+already written, so the reboot boots the new kernel and the new generation.
+
 ## Secrets
 
 Install the age identity from `.secrets/age/Hippogriff.txt` at
@@ -84,16 +91,31 @@ only path sops-nix reads.
   (`users/seeker/packages/office.nix`, mpv, netease-cloud-music-gtk, zotero).
   obsidian, qq and vscode are x86_64-linux only in nixpkgs and cannot be
   enabled on this host (vscodium is available as an editor substitute).
-- Docker: the port kernel already carries what containers need —
+- Docker: the port kernel carries the container stack's requirements —
   `CONFIG_NF_TABLES=y` (built-in, so no nf_tables.ko) with NFT_NAT/NFT_MASQ/
   NFT_REDIR and nf_nat as modules, bridge/veth/br_netfilter, the built-in
   overlayfs and cgroups/namespaces/seccomp (verified against the running
   kernel 2026-10-10; the NixOS firewall is active on the same nftables
-  backend). VXLAN, which `docker network create --driver overlay` and swarm
-  mode need, was the one gap; the port enables it in commit 2987781 and the
-  first system built from the bumped `liuqin` input picks it up. NetBird needs
-  a runtime enrollment (`netbird up --setup-key ...`), mihomo reads its
-  configuration from the sops secret.
+  backend), VXLAN for `docker network create --driver overlay` (port commit
+  2987781) — and, since port commit 4c02087, the two xt targets Docker's
+  iptables client needs: `CONFIG_NETFILTER_XT_TARGET_MASQUERADE` and
+  `CONFIG_NETFILTER_XT_NAT`. Docker's client is iptables-nft (there are no
+  ip_tables/ip6_tables modules), and iptables-nft emulates `-j MASQUERADE`
+  and DNAT through nft_compat, which fails unless the module registering the
+  xt target exists; the nft nat/masq set above only serves rules written as
+  native nft expressions. Without the two, dockerd 29.8.1 cannot start at
+  all — measured 2026-10-10: "Warning: Extension MASQUERADE revision 0 not
+  supported, missing kernel module?", then `RULE_INSERT failed (No such file
+  or directory): rule in chain POSTROUTING`, then "error creating default
+  \"bridge\" network: Failed to Setup IP tables: Unable to enable NAT rule".
+  The same failure is what makes a deploy-rs run roll back while the running
+  kernel predates 4c02087: switch-to-configuration restarts docker.service,
+  it fails under the old kernel, and activation reports the failed unit. A
+  kernel change needs a reboot anyway, so the first generation carrying the
+  fix goes in with the manual push and `installBootLoader` path below plus
+  `systemctl reboot`; deploy-rs works normally once the new kernel runs.
+  NetBird needs a runtime enrollment (`netbird up --setup-key ...`), mihomo
+  reads its configuration from the sops secret.
 - `/nix/store` comes up read-only from the initrd, but store writes still
   work: after boot, `nix-store --add-fixed` on the tablet succeeded with the
   mount left untouched (verified 2026-10-10), so `nix copy` and the deploy
