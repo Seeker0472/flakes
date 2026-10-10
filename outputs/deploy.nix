@@ -4,8 +4,6 @@
   ...
 }:
 let
-  lib = inputs.nixpkgs.lib;
-
   # deploy-rs' lib functions bind the deploy-rs *package* into the activation
   # wrapper they build. Use the official overlay for the lib, but take the
   # package from plain nixpkgs: it is in the binary cache for both target
@@ -108,18 +106,32 @@ in
   };
 
   perSystem =
-    { system, ... }:
-    let
-      deployChecks = (deployPkgs system).deploy-rs.lib.deployChecks self.deploy;
-    in
+    { pkgs, system, ... }:
     {
-      # Keep deploy-rs' `deploy-schema` check; drop `deploy-activate`, which
-      # requires every node's activation package (all three system closures,
-      # including the aarch64 Hippogriff one) to be built - and deploy-rs runs
-      # the whole `nix flake check` before every deployment. Verify a single
-      # node's wrapper explicitly when wanted:
-      #   nix build .#deploy.nodes.<name>.profiles.system.path
-      checks = lib.filterAttrs (name: _: name == "deploy-schema") deployChecks;
+      # deploy-rs' own checks are deliberately not wired in:
+      #  - `deploy-activate` requires every node's activation package to be
+      #    built (all three system closures);
+      #  - `deploy-schema` builds `builtins.toJSON deploy`, whose store-path
+      #    strings carry their string context, so it pulls those same closures
+      #    (bun/zig included) into a validation that only needs the JSON
+      #    bytes.
+      # deploy-rs runs the whole `nix flake check` before every deployment, so
+      # both would make each deploy build every host. The schema check below
+      # is the same validation with the context stripped; a single node's
+      # activation wrapper is verified by building it, which the deploy does
+      # anyway: nix build .#deploy.nodes.<name>.profiles.system.path
+      checks.deploy-schema =
+        pkgs.runCommand "deploy-rs-schema"
+          {
+            nativeBuildInputs = [ pkgs.check-jsonschema ];
+          }
+          ''
+            check-jsonschema --schemafile ${inputs.deploy-rs}/interface.json \
+              ${pkgs.writeText "deploy.json" (
+                builtins.unsafeDiscardStringContext (builtins.toJSON self.deploy)
+              )}
+            touch $out
+          '';
 
       apps.deploy-rs = {
         type = "app";
