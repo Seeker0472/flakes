@@ -4,7 +4,10 @@
 }:
 {
   programs = {
-    ai.enable = lib.mkDefault true;
+    ai = {
+      enable = lib.mkDefault true;
+      omp.enable = lib.mkDefault true;
+    };
     bash.enable = true;
     direnv.enable = true;
     fish.enable = true;

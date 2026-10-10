@@ -49,13 +49,18 @@ private key. SOPS still remains the single source for each key pair.
 
 ## AI relay authentication
 
-`users/seeker/ai.secrets.json` holds one rust.cat API key per agent:
+`users/seeker/ai.secrets.json` holds the allrouter.cc relay keys plus the
+official DeepSeek key:
 
-- `codex_api_key`
-- `grok_api_key`
-- `kimi_api_key`
+- `codex_api_key` — relay GPT-model group; also used by the OMP
+  `deepseek-rustcat` and `claude-rustcat` providers
+- `grok_api_key` — relay Grok-model group
+- `kimi_api_key` — relay Kimi-model group
+- `deepseek_official_api_key` — `api.deepseek.com`, not the relay
 
-Replace each `CHANGE_ME` placeholder with:
+The relay keys are scoped per model group: crossing groups fails with
+`MODEL_NOT_AVAILABLE` or `subscription package unavailable`, so they cannot
+be merged into one key. Edit with:
 
 ```bash
 sops users/seeker/ai.secrets.json

@@ -26,9 +26,11 @@ in
   options.programs.ai = {
     enable = lib.mkEnableOption "Codex, Grok, and Kimi coding agents";
 
+    omp.enable = lib.mkEnableOption "the Oh My Pi (OMP) model registry";
+
     relayUrl = lib.mkOption {
       type = lib.types.str;
-      default = "https://rust.cat";
+      default = "https://allrouter.cc";
       description = ''
         Shared OpenAI-compatible relay origin without a `/v1` suffix.
         Grok and Kimi use `{relayUrl}/v1`; Codex uses `{relayUrl}`.
@@ -58,6 +60,59 @@ in
         sessionVariables = sessionUrls;
       };
     })
+    (lib.mkIf (cfg.enable && cfg.omp.enable) {
+      assertions = [
+        {
+          assertion = agents ? omp;
+          message = ''
+            llm-agents.nix is missing the Oh My Pi package on ${pkgs.stdenv.hostPlatform.system}.
+            Need: omp
+          '';
+        }
+      ];
+
+      home.packages = [ agents.omp ];
+
+      # OMP intentionally keeps provider names explicit.  The model lists are
+      # discovered from each `/v1/models` endpoint, so this file does not go
+      # stale when an upstream adds or retires a model.
+      home.file.".omp/agent/models.yml".text = ''
+        providers:
+          deepseek-official:
+            baseUrl: https://api.deepseek.com/v1
+            apiKey: DEEPSEEK_OFFICIAL_API_KEY
+            api: openai-completions
+            discovery:
+              type: openai-models-list
+
+          deepseek-rustcat:
+            baseUrl: https://allrouter.cc/v1
+            apiKey: OPENAI_API_KEY
+            api: openai-completions
+            discovery:
+              type: openai-models-list
+
+          claude-rustcat:
+            baseUrl: https://allrouter.cc/v1
+            apiKey: OPENAI_API_KEY
+            discovery:
+              type: proxy
+
+          kimi-rustcat:
+            baseUrl: https://allrouter.cc/v1
+            apiKey: KIMI_API_KEY
+            api: openai-completions
+            discovery:
+              type: openai-models-list
+
+          grok-rustcat:
+            baseUrl: https://allrouter.cc/v1
+            apiKey: XAI_API_KEY
+            api: openai-completions
+            discovery:
+              type: openai-models-list
+      '';
+    })
     {
       systemd.user.sessionVariables = lib.mkIf cfg.enable sessionUrls;
     }
@@ -77,6 +132,10 @@ in
         }
         {
           directory = ".kimi-code";
+          mode = "0700";
+        }
+        {
+          directory = ".omp";
           mode = "0700";
         }
       ];
