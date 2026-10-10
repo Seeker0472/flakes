@@ -4,9 +4,41 @@ King'sCross is the NixOS configuration for `vps.seekerer.com`. Build and
 activate it from the flake repository; routine updates do not use
 `nixos-anywhere`.
 
-## Test and Deploy
+## Deploy
 
-Run these commands from `/home/seeker/nixos-config`:
+Deploy with deploy-rs from a checkout of this repository; the SSH options and
+the profile live in `flake.deploy.nodes.kingsCross`:
+
+```bash
+nix run .#deploy-rs -- .#kingsCross
+```
+
+It builds locally, pushes the closure to `root@vps.seekerer.com` over the
+ssh-ng store (key `~/.ssh/id_admin`), sets `/nix/var/nix/profiles/system` and
+activates with `switch-to-configuration switch`; that activation installs the
+bootloader as well. deploy-rs' magicRollback activates the new generation
+under a temporary profile first and reverts the profile when the host stops
+answering SSH, so a deploy that cuts the connection rolls back on its own.
+
+Keep the provider console/VNC available while deploying changes to
+networking, SSH, the kernel or the boot loader: rollback covers a lost
+connection, not every failure mode. `switch` normally does not require a
+reboot.
+
+Useful switches:
+
+```bash
+nix run .#deploy-rs -- .#kingsCross --dry-activate  # run activation without setting the profile
+nix run .#deploy-rs -- .#kingsCross --skip-checks   # skip the pre-deploy flake checks
+```
+
+(`--test` exists, but deploy-rs still sets the profile in that mode; it is not
+the same as `nixos-rebuild test`.)
+
+## Fallback without deploy-rs
+
+The previous `nixos-rebuild` flow still works and is the way out if deploy-rs
+is unavailable:
 
 ```bash
 cd /home/seeker/nixos-config
@@ -27,10 +59,6 @@ nix run nixpkgs#nixos-rebuild -- test \
   --target-host root@vps.seekerer.com \
   --use-substitutes
 
-# Confirm the normal account and system are healthy.
-ssh seeker@vps.seekerer.com \
-  'sudo -n true && systemctl is-system-running --wait'
-
 # Make the tested configuration the boot default.
 nix run nixpkgs#nixos-rebuild -- switch \
   --no-write-lock-file \
@@ -38,12 +66,6 @@ nix run nixpkgs#nixos-rebuild -- switch \
   --target-host root@vps.seekerer.com \
   --use-substitutes
 ```
-
-`switch` normally does not require a reboot. Keep the VNC/console available
-while testing changes to networking, SSH, the kernel, or the boot loader.
-
-After the configuration files are committed and tracked, `FLAKE_REF` can be
-shortened to `".#King'sCross"`.
 
 ## Ports
 

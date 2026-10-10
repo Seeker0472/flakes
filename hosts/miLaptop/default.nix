@@ -24,5 +24,16 @@ import ../lib/mk-host-module.nix {
         environment.systemPackages = [ pkgs.smartmontools ];
       }
     )
+    (
+      { ... }:
+      {
+        # deploy-rs pushes the closure over the ssh-ng store; the machine user
+        # must be allowed to import unsigned paths (nixpkgs trusts root only).
+        nix.settings.trusted-users = [
+          "root"
+          "seeker"
+        ];
+      }
+    )
   ];
 }

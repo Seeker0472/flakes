@@ -56,6 +56,10 @@
       url = "github:numtide/llm-agents.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    deploy-rs = {
+      url = "github:serokell/deploy-rs";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     liuqin = {
       url = "github:Seeker0472/liuqin-nixos";
       # Single nixpkgs across the repository; the port's kernel/device
