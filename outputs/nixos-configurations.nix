@@ -70,10 +70,16 @@ in
   flake.nixosConfigurations = lib.mapAttrs mkHost hosts // {
     # The Xiaomi Pad 6 Pro (liuqin port). The port's own mkLiuqinSystem
     # builder cannot take specialArgs, and this repository's modules expect
-    # the flake inputs as a module argument, so its three-line wiring is
-    # replicated here over lib.nixosSystem: the port overlay, the inject
-    # overlay that re-points the device packages at the x86_64->aarch64
-    # cross set, the unfree predicate and the hardware module.
+    # the flake inputs as a module argument, so its wiring is replicated
+    # here over lib.nixosSystem: the port overlay, the unfree predicate and
+    # the hardware module.
+    #
+    # The port's inject overlay (overlay-inject.nix) is deliberately not
+    # applied. Its device packages (kernel, U-Boot, firmware, sensors) are
+    # x86_64->aarch64 cross derivations: their builder only runs on x86_64,
+    # so the tablet can substitute but never build or replace them. Native
+    # aarch64 definitions build on the tablet itself and on an x86_64 host
+    # through binfmt (qemu-user).
     Hippogriff =
       let
         liuqin = inputs.liuqin;
@@ -83,10 +89,7 @@ in
         specialArgs = { inherit inputs; };
         modules = [
           {
-            nixpkgs.overlays = [
-              liuqin.overlays.default
-              (import "${liuqin}/overlay-inject.nix" { pkgsArm = liuqin.lib.pkgsArm; })
-            ];
+            nixpkgs.overlays = [ liuqin.overlays.default ];
             nixpkgs.config.allowUnfreePredicate = liuqin.lib.allowLiuqinUnfree;
           }
           liuqin.nixosModules.liuqin

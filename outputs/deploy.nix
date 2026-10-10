@@ -34,6 +34,7 @@ let
       sshUser,
       sshOpts,
       interactiveSudo ? false,
+      remoteBuild ? false,
     }:
     {
       inherit
@@ -41,6 +42,7 @@ let
         sshUser
         sshOpts
         interactiveSudo
+        remoteBuild
         ;
       profiles.system = {
         user = "root";
@@ -100,6 +102,10 @@ in
       hostName = "Hippogriff";
       hostname = "192.168.11.132"; # current lease; override with --hostname <ip>
       sshUser = "seeker";
+      # The device packages are native aarch64 (see
+      # outputs/nixos-configurations.nix), so deploys build locally and push
+      # the closure by default; --remote-build makes the tablet build them
+      # instead (the CLI can only turn this on, not off).
       sshOpts = [
         "-i"
         key

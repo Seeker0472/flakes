@@ -2,16 +2,21 @@
 
 Hippogriff is the Xiaomi Pad 6 Pro (`xiaomi,liuqin`, SM8475, aarch64). The
 community port is consumed as the `liuqin` flake input
-(`github:Seeker0472/liuqin-nixos`); its builder injects the hardware module,
-the package overlay and the device packages from the port's x86_64→aarch64
-cross set. The tablet keeps Android in `userdata` and boots NixOS from the
+(`github:Seeker0472/liuqin-nixos`); `outputs/nixos-configurations.nix` applies
+its hardware module and package overlay and deliberately leaves the device
+packages (kernel, U-Boot, firmware) native aarch64 instead of injecting the
+port's x86_64→aarch64 cross set, so the tablet can build and replace its own
+boot chain. The tablet keeps Android in `userdata` and boots NixOS from the
 `linux` partition through U-Boot's extlinux generation menu.
 
 ## Build
 
-The port builds the kernel and device packages in its cross set; only the
-per-machine derivations (/etc, units, initrd) are aarch64 and need binfmt (or
-the device itself). On a host with aarch64 binfmt enabled:
+The kernel and the other device packages (U-Boot, firmware, sensors) are
+native aarch64 derivations, like the per-machine ones (/etc, units, initrd,
+images): they build on the tablet itself, or through binfmt on an x86_64 host
+with qemu-user. Compiling the kernel under emulation is slow; deploys build
+here by default, and `--remote-build` (see [Deploy](#deploy)) makes the tablet
+build instead:
 
 ```bash
 nix build .#nixosConfigurations.Hippogriff.config.system.build.toplevel
@@ -19,16 +24,24 @@ nix build .#nixosConfigurations.Hippogriff.config.system.build.toplevel
 
 ## Deploy
 
-Deploy with deploy-rs from the flake:
+Deploy with deploy-rs - the default path for routine updates:
 
 ```bash
 nix run .#deploy-rs -- .#hippogriff
 ```
 
-It builds locally (binfmt runs the per-machine aarch64 derivations), pushes
-the closure to `seeker@192.168.11.132` over the ssh-ng store, sets
+It builds locally (binfmt runs the aarch64 device packages here - slow for the
+kernel - while the unmodified parts come from cache.nixos.org), pushes the
+closure to `seeker@192.168.11.132` over the ssh-ng store, sets
 `/nix/var/nix/profiles/system` and activates with `switch-to-configuration
 switch`, prompting once for the account's sudo password (`interactiveSudo`).
+The unsigned device packages are accepted because `seeker` is in the tablet's
+`nix.settings.trusted-users` (`hosts/Hippogriff/default.nix`). Passing
+`--remote-build` lets the tablet build its own closure instead: only the
+derivation crosses the wire and nothing unsigned is copied. The CLI flag can
+only turn this on for one invocation, not off; `mkNode`'s `remoteBuild`
+argument enables it per node. Both routes realise the same store paths, so
+mixing them does not rebuild what the other side already has.
 `switch-to-configuration` is the NG implementation here and runs the extlinux
 loader (`system.build.installBootLoader`) for `switch` and `boot` alike, so
 the generation's kernel, initrd, DTB and menu entry are written by the
@@ -87,10 +100,22 @@ only path sops-nix reads.
 
 - Enabled dev-machine services (2026-10-10): GNOME, KDE Connect, mihomo
   (share/tun/web), NetBird, Docker, GnuPG (pinentry-qt), fcitx5 (wayland,
-  Chinese addons), Zed, kitty, zen-browser, plus the office/media app set
-  (`users/seeker/packages/office.nix`, mpv, netease-cloud-music-gtk, zotero).
-  obsidian, qq and vscode are x86_64-linux only in nixpkgs and cannot be
-  enabled on this host (vscodium is available as an editor substitute).
+  Chinese addons), Zed, kitty, zen-browser, the office set
+  (`users/seeker/packages/office.nix`), the light media set
+  (`users/seeker/packages/media.nix`: mpv, viewnior, gimp3, gtkwave, surfer,
+  cava), netease-cloud-music-gtk, zotero, obsidian, qq, vscode, and the
+  shared MIME defaults from `users/seeker/xdg_default.nix`. obsidian, qq and
+  vscode do have aarch64-linux builds in this nixpkgs revision
+  (`meta.platforms`, checked 2026-10-10), so the earlier "x86_64-only" note
+  no longer applies; they are unfree, so there is no aarch64 build on
+  cache.nixos.org and the first deploy builds them on the tablet (which
+  `remoteBuild = true` does anyway). `users/seeker/packages/media-heavy.nix`
+  (obs-studio) stays out: this machine is not meant for heavy capture
+  workloads.
+- Fonts: `sarasa-gothic` and `maple-mono.NF-CN` plus the laptop profile's
+  fontconfig defaults (Noto Sans/Serif CJK SC, Maple Mono NF CN, Noto Color
+  Emoji). Without them plain sans-serif/monospace requests resolve to
+  DejaVu, which has no CJK metrics and no Nerd Font glyphs for kitty/zed.
 - Docker: the port kernel carries the container stack's requirements —
   `CONFIG_NF_TABLES=y` (built-in, so no nf_tables.ko) with NFT_NAT/NFT_MASQ/
   NFT_REDIR and nf_nat as modules, bridge/veth/br_netfilter, the built-in
