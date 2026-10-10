@@ -16,6 +16,14 @@ The `mi15` and `miPad` nix-on-droid environments each have a dedicated runtime
 identity. They can decrypt the same SSH and AI relay secrets as `miLaptop`, but
 their age private keys are kept separately so either Android device can be
 revoked without changing the other one.
+`King'sCross` has no age key file: its identity is derived from the VPS SSH host
+key (`sops.age.sshKeyPaths` in `hosts/KingsCross/netbird.nix`), so
+`kings_cross_age` must equal the `ssh-to-age` form of
+`/etc/ssh/ssh_host_ed25519_key` on the VPS. When the machine or its host key is
+replaced, refresh the anchor in `.sops.yaml` and run `sops updatekeys -y` on
+`hosts/KingsCross/netbird.secrets.yaml` and
+`users/seeker/taskwarrior.secrets.yaml`.
+
 The bootstrap identities live under the git-ignored `.secrets/age/` directory.
 The SOPS identity itself must be installed out of band because it cannot decrypt
 itself.

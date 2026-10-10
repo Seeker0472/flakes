@@ -44,3 +44,14 @@ while testing changes to networking, SSH, the kernel, or the boot loader.
 
 After the configuration files are committed and tracked, `FLAKE_REF` can be
 shortened to `".#King'sCross"`.
+
+## Ports
+
+- The reserved band `28400-28499` is open for TCP and UDP in the host
+  firewall. Put temporary services there instead of editing firewall rules.
+- Persistent services declare their own ports in their modules (for example
+  `hosts/KingsCross/netbird.nix`). Anything outside the band needs a firewall
+  entry in the owning module.
+- If the provider keeps a security group or firewall in front of the VPS, open
+  the same ports there too; the NixOS firewall only filters packets that reach
+  the host.

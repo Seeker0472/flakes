@@ -24,6 +24,25 @@ import ../lib/mk-host-module.nix {
         networking = {
           useDHCP = lib.mkDefault true;
           dhcpcd.extraConfig = "noarp";
+
+          firewall = {
+            # Reserved band for ad-hoc services on the VPS: 28400-28499 (TCP and
+            # UDP) stays open so temporary tools can be started without another
+            # rebuild. Persistent services still declare their own ports in
+            # their modules (netbird.nix, taskchampion.nix).
+            allowedTCPPortRanges = [
+              {
+                from = 28400;
+                to = 28499;
+              }
+            ];
+            allowedUDPPortRanges = [
+              {
+                from = 28400;
+                to = 28499;
+              }
+            ];
+          };
         };
 
         boot.initrd.availableKernelModules = [

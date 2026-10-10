@@ -8,7 +8,7 @@
   machine.programs.nixvim.enable = true;
 
   disk = {
-    device = "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_0068e137-6410-451b-8733-d8fc25f088c7";
+    device = "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_6c51f2ff-72fe-438f-b423-2422e90231c0";
     bootMode = "bios";
   };
 }

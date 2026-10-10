@@ -38,7 +38,7 @@
     {
       dnsProvider = "alidns";
       extraLegoFlags = [
-        "--dns.propagation-wait"
+        "--dns.propagation.wait"
         "30s"
       ];
       credentialFiles = {
