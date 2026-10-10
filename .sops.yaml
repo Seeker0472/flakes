@@ -8,6 +8,7 @@ keys:
   - &mi15_age age10mpqu7qyk22ny6ayy7yn36qq0y70tmr2475rzn6qxycx3jlgqyzs8plm8a
   - &mi_pad_age age1mz6cjamtwnqulrzazmm8aatyzx9e9f4g5xurq5yqavn58p5prghqn2xhkk
   - &burrow_age age1p729spl3nrd6lk5h7czchwlvys4m2vzg35rc3me56kjytawh2v0q62yj7f
+  - &hippogriff_age age1f6zu5ekw30k4h32du2qdsguxxqt2rdjf3pgq6d5cjwxethfjddhsh74uqk
 
 creation_rules:
   - path_regex: hosts/KingsCross/.*secrets\.yaml$
@@ -28,6 +29,7 @@ creation_rules:
           - *mi15_age
           - *mi_pad_age
           - *burrow_age
+          - *hippogriff_age
 
   - path_regex: users/seeker/ssh/github\.secrets\.json$
     unencrypted_suffix: _unencrypted
@@ -40,6 +42,7 @@ creation_rules:
           - *diagonal_alley_age
           - *mi15_age
           - *mi_pad_age
+          - *hippogriff_age
 
   - path_regex: users/seeker/ssh/external\.secrets\.json$
     unencrypted_suffix: _unencrypted
@@ -52,6 +55,7 @@ creation_rules:
           - *diagonal_alley_age
           - *mi15_age
           - *mi_pad_age
+          - *hippogriff_age
 
   - path_regex: users/seeker/ssh/devVM\.secrets\.json$
     unencrypted_suffix: _unencrypted
@@ -68,6 +72,14 @@ creation_rules:
           - *admin_seeker_age
           - *recovery_age
           - *diagonal_alley_age
+
+  - path_regex: users/seeker/ssh/Hippogriff\.secrets\.json$
+    unencrypted_suffix: _unencrypted
+    key_groups:
+      - age:
+          - *admin_seeker_age
+          - *recovery_age
+          - *hippogriff_age
 
   - path_regex: users/seeker/ssh/miLaptop\.secrets\.json$
     unencrypted_suffix: _unencrypted
@@ -86,6 +98,7 @@ creation_rules:
           - *recovery_age
           - *dev_vm_age
           - *diagonal_alley_age
+          - *hippogriff_age
 
   - path_regex: modules/profiles/programs/mihomo/mihomo\.secrets\.yaml$
     unencrypted_suffix: _unencrypted
@@ -107,6 +120,7 @@ creation_rules:
           - *diagonal_alley_age
           - *mi15_age
           - *mi_pad_age
+          - *hippogriff_age
 
   - path_regex: users/seeker/taskwarrior\.secrets\.yaml$
     unencrypted_suffix: _unencrypted
@@ -116,6 +130,7 @@ creation_rules:
           - *recovery_age
           - *kings_cross_age
           - *diagonal_alley_age
+          - *hippogriff_age
 
   - path_regex: .*secrets\.(yaml|json)$
     unencrypted_suffix: _unencrypted

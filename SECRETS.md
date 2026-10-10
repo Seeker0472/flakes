@@ -5,10 +5,14 @@ SOPS uses two human-managed age identities:
 - `admin_seeker_age` is installed on `miLaptop` and `nixos-wsl` for daily editing.
 - `recovery_age` is kept offline and is a recipient for every encrypted file.
 
-`devVM`, `DiagonAlley`, and `burrow` have separate runtime identities. `devVM`
+`devVM`, `DiagonAlley`, `Hippogriff`, and `burrow` have separate runtime
+identities. `devVM`
 and `DiagonAlley` can decrypt their own SSH client key and the shared secrets
-consumed by that host. `DiagonAlley` and `burrow` also receive the administrator
-SSH key so they retain VPS maintenance access. `burrow` deliberately does not
+consumed by that host. `DiagonAlley`, `Hippogriff`, and `burrow` also receive
+the administrator SSH key so they retain VPS maintenance access.
+`Hippogriff` additionally consumes the shared external/GitHub keys, the AI
+relay file, the shared nix configuration, and the Taskwarrior pair. `burrow`
+deliberately does not
 receive the shared external, GitHub, or AI relay credentials.
 `gpu01` has a separate runtime identity, scoped to the shared external and
 GitHub keys plus the shared AI relay authentication file.
@@ -36,7 +40,8 @@ itself.
 - `users/seeker/ssh/github.secrets.json` contains the single GitHub key shared by
   the four managed development clients.
 - `users/seeker/ssh/admin.secrets.json` retains the existing administrator key and is
-  deployed to `DiagonAlley`, `burrow`, `miLaptop`, `nixos-wsl`, `mi15`, and
+  deployed to `DiagonAlley`, `burrow`, `miLaptop`, `nixos-wsl`, `Hippogriff`,
+  `mi15`, and
   `miPad`.
 - `gpu01` receives the four development public keys in `authorized_keys` and
   the shared external and GitHub private keys, but no mesh or administrator
@@ -67,7 +72,8 @@ sops users/seeker/ai.secrets.json
 ```
 
 When `programs.ai.enable` is set, Home Manager deploys those values on
-`miLaptop`, `DiagonAlley`, `devVM`, `nixos-wsl`, `gpu01`, `mi15`, and
+`miLaptop`, `DiagonAlley`, `devVM`, `nixos-wsl`, `gpu01`, `Hippogriff`,
+`mi15`, and
 `miPad` as:
 
 - Codex: `~/.codex/auth.json` (`OPENAI_API_KEY`) and session `OPENAI_API_KEY`
@@ -87,7 +93,8 @@ mode `0400` Taskwarrior configuration fragment on `miLaptop` and
 `DiagonAlley`. King'sCross reads only the client ID to restrict the sync
 server; the encryption secret is not passed to the server process.
 
-`miLaptop` is the primary replica for recurring tasks. `DiagonAlley` disables
+`miLaptop` is the primary replica for recurring tasks. `DiagonAlley` and
+`Hippogriff` disable
 recurrence generation to avoid duplicate recurring tasks while retaining full
 sync and task editing support.
 
@@ -128,6 +135,13 @@ band at `/home/seeker/.config/sops/age/keys.txt` before its first activation.
 It decrypts only the shared Mihomo configuration and the administrator SSH key
 selected for VPS maintenance. Wi-Fi credentials remain in NetworkManager's
 local persistent connection profile and are not managed by SOPS.
+
+Install the dedicated Hippogriff identity from `.secrets/age/Hippogriff.txt`
+out of band at `/home/seeker/.config/sops/age/keys.txt` (owner `seeker`, mode
+`0600`) before its first activation. It decrypts its own SSH client key, the
+shared external and GitHub keys, the administrator SSH key, the AI relay
+file, the shared nix configuration, and the Taskwarrior sync pair. See
+`docs/maintenance/hippogriff.md` for the build, update, and rollback workflow.
 
 Before the first activation on an existing `miLaptop`, copy the old
 `/persist/home/seeker/age/keys` identity to

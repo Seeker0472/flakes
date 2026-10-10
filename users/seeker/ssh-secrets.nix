@@ -15,6 +15,7 @@ let
     "DiagonAlley"
     "miLaptop"
     "nixos-wsl"
+    "Hippogriff"
   ];
   meshHost = user: {
     User = user;
@@ -42,6 +43,7 @@ in
       miLaptop = meshHost "seeker";
       devVM = meshHost "seeker";
       nixos-wsl = meshHost "seeker";
+      Hippogriff = meshHost "seeker";
       ecos = meshHost "seeker4721";
     }
     // lib.optionalAttrs isAdminHost {

@@ -245,6 +245,26 @@
         "type": "github"
       }
     },
+    "liuqin": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1791554267,
+        "narHash": "sha256-U3HXLZNYm5djTwatjONn7RRVzp8Au1YxvOtrAR/mRUo=",
+        "owner": "Seeker0472",
+        "repo": "liuqin-nixos",
+        "rev": "b27a41e8545e462b3c96bc36bf2538d01a08701f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Seeker0472",
+        "repo": "liuqin-nixos",
+        "type": "github"
+      }
+    },
     "llm-agents": {
       "inputs": {
         "bun2nix": "bun2nix",
@@ -492,6 +512,7 @@
         "git-hooks-nix": "git-hooks-nix",
         "home-manager": "home-manager",
         "impermanence": "impermanence",
+        "liuqin": "liuqin",
         "llm-agents": "llm-agents",
         "nix-on-droid": "nix-on-droid",
         "nixos-wsl": "nixos-wsl",

@@ -6,6 +6,7 @@ let
     miLaptop = ./ssh/miLaptop.secrets.json;
     devVM = ./ssh/devVM.secrets.json;
     nixos-wsl = ./ssh/nixos-wsl.secrets.json;
+    Hippogriff = ./ssh/Hippogriff.secrets.json;
     github = ./ssh/github.secrets.json;
   };
   readPublicKey = file: (builtins.fromJSON (builtins.readFile file)).public_key_unencrypted;
@@ -15,6 +16,7 @@ let
     miLaptop = readPublicKey files.miLaptop;
     devVM = readPublicKey files.devVM;
     nixos-wsl = readPublicKey files.nixos-wsl;
+    Hippogriff = readPublicKey files.Hippogriff;
   };
   githubKey = readPublicKey files.github;
 in

@@ -56,6 +56,12 @@
       url = "github:numtide/llm-agents.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    liuqin = {
+      url = "github:Seeker0472/liuqin-nixos";
+      # Single nixpkgs across the repository; the port's kernel/device
+      # packages are built against the same toolchain as every other host.
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
   outputs =
     {
