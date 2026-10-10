@@ -36,7 +36,10 @@ import ../lib/mk-host-module.nix {
 
         # ssh-ng:// store deployments from the build host (nix copy) need
         # the machine user to be trusted by the local daemon.
-        nix.settings.trusted-users = [ "root" "seeker" ];
+        nix.settings.trusted-users = [
+          "root"
+          "seeker"
+        ];
 
         services.pipewire = {
           enable = true;
