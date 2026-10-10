@@ -6,8 +6,8 @@ activate it from the flake repository; routine updates do not use
 
 ## Deploy
 
-Deploy with deploy-rs from a checkout of this repository; the SSH options and
-the profile live in `flake.deploy.nodes.kingsCross`:
+Deploy with deploy-rs - the default path for routine updates; the SSH options
+and the profile live in `flake.deploy.nodes.kingsCross`:
 
 ```bash
 nix run .#deploy-rs -- .#kingsCross

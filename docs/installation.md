@@ -9,6 +9,16 @@
 | `DiagonAlley` | `/dev/disk/by-id/nvme-SAMSUNG_MZVL21T0HCLR-00B00_S676NU0W123827` | `.secrets/age/DiagonAlley.txt` | `/mnt/persist/home/seeker/.config/sops/age/keys.txt` |
 | `burrow` | `/dev/disk/by-id/ata-SK_hynix_SC311_SATA_128GB_MJ86N833110606T20` | `.secrets/age/burrow.txt` | `/mnt/home/seeker/.config/sops/age/keys.txt` |
 
+## 日常更新
+
+安装完成后，日常更新推荐用 deploy-rs（各机器用法见 `docs/maintenance/`）：
+
+```bash
+nix run .#deploy-rs -- .#miLaptop
+nix run .#deploy-rs -- .#kingsCross
+nix run .#deploy-rs -- .#hippogriff
+```
+
 ## 1. SCP 源码和密钥
 
 从不含 `.secrets` 的干净 worktree 传输源码，只单独传输目标机器对应的
