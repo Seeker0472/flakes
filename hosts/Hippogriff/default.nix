@@ -77,6 +77,24 @@ import ../lib/mk-host-module.nix {
         hardware.i2c.enable = true;
         zramSwap.enable = true;
 
+        # The port ships Noto CJK, but the fontconfig defaults still resolve
+        # to DejaVu: no CJK metrics for plain sans-serif/monospace requests
+        # and no Nerd Font glyphs (kitty, zed). Mirror the laptop profile's
+        # defaults; emoji falls back to Noto Colour Emoji instead of
+        # JoyPixels, whose nixpkgs licence flag is not accepted here.
+        fonts = {
+          packages = [
+            pkgs.sarasa-gothic # 更纱黑体
+            pkgs.maple-mono.NF-CN
+          ];
+          fontconfig.defaultFonts = {
+            sansSerif = [ "Noto Sans CJK SC" ];
+            serif = [ "Noto Serif CJK SC" ];
+            monospace = [ "Maple Mono NF CN" ];
+            emoji = [ "Noto Color Emoji" ];
+          };
+        };
+
         # Input method: the laptop profile carries this block for PC laptops;
         # the tablet's machine.type is "others", so it is stated here.
         i18n.inputMethod = {

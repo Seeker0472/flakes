@@ -29,6 +29,7 @@ in
         inputs.zen-browser.homeModules.beta
         ./hm-base.nix
         ./home.nix
+        ./xdg_default.nix
         ./ssh-secrets.nix
         ./taskwarrior-sync.nix
         ../../modules/profiles/programs/home/kitty.nix
@@ -43,15 +44,17 @@ in
         zen-browser.enable = true;
       };
 
-      # Office/document tools plus the players and reference apps from the
-      # desktop host's list. obsidian, qq and vscode are x86_64-linux only in
-      # nixpkgs; the editor/recorder set from packages/media.nix (obs-studio,
-      # gimp, ...) stays out by request.
+      # Same office/media set and editors as the desktop host. obsidian, qq
+      # and vscode all carry aarch64-linux builds in this nixpkgs revision
+      # (checked against pkgs.meta.platforms).
       home.packages =
         (import ./packages/office.nix { inherit pkgs; })
+        ++ (import ./packages/media.nix { inherit pkgs; })
         ++ (with pkgs; [
-          mpv
           netease-cloud-music-gtk
+          obsidian
+          qq
+          vscode
           zotero
         ]);
     };
