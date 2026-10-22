@@ -11,17 +11,18 @@ and `DiagonAlley` can decrypt their own SSH client key and the shared secrets
 consumed by that host. `DiagonAlley`, `Hippogriff`, and `burrow` also receive
 the administrator SSH key so they retain VPS maintenance access.
 `Hippogriff` additionally consumes the shared external/GitHub keys, the AI
-relay file, the shared nix configuration, the Taskwarrior pair, and the shared
-Mihomo configuration. `Willow` has a host-scoped
+provider credentials, the shared nix configuration, the Taskwarrior pair, and
+the shared Mihomo configuration. `Willow` has a host-scoped
 `hosts/Willow/mihomo.secrets.yaml` and does not receive the shared airport
 subscriptions. `burrow`
 deliberately does not
-receive the shared external, GitHub, or AI relay credentials.
+receive the shared external, GitHub, or AI provider credentials.
 `gpu01` has a separate runtime identity, scoped to the shared external and
-GitHub keys plus the shared AI relay authentication file.
+GitHub keys plus the shared AI provider credentials (Claude Code and
+DeepSeek).
 The `mi15` and `miPad` nix-on-droid environments each have a dedicated runtime
-identity. They can decrypt the same SSH and AI relay secrets as `miLaptop`, but
-their age private keys are kept separately so either Android device can be
+identity. They can decrypt the same SSH and AI provider secrets as `miLaptop`,
+but their age private keys are kept separately so either Android device can be
 revoked without changing the other one.
 `King'sCross` has no age key file: its identity is derived from the VPS SSH host
 key (`sops.age.sshKeyPaths` in `hosts/KingsCross/netbird.nix`), so
@@ -62,38 +63,33 @@ not confidential, and keeping them readable lets NixOS and the standalone
 gpu01 Home Manager configuration build `authorized_keys` without decrypting a
 private key. SOPS still remains the single source for each key pair.
 
-## AI relay authentication
+## AI provider credentials
 
-`users/seeker/ai.secrets.json` holds the allrouter.cc relay keys plus the
-official DeepSeek key:
+`users/seeker/ai.secrets.json` holds only:
 
-- `codex_api_key` — relay GPT-model group; also used by the OMP
-  `deepseek-rustcat` and `claude-rustcat` providers
-- `grok_api_key` — relay Grok-model group
-- `kimi_api_key` — relay Kimi-model group
-- `deepseek_official_api_key` — `api.deepseek.com`, not the relay
+- `claude_code_api_key` — allrouter.cc key used by OMP's `claude-code` provider
+- `deepseek_official_api_key` — official DeepSeek API (`api.deepseek.com`)
 
-The relay keys are scoped per model group: crossing groups fails with
-`MODEL_NOT_AVAILABLE` or `subscription package unavailable`, so they cannot
-be merged into one key. Edit with:
+Codex uses the official OpenAI endpoint and ChatGPT login. It has no
+`OPENAI_BASE_URL` or API-key template; run `codex login` and the token is
+stored in `~/.codex/auth.json` (a regular persisted file). Edit the secrets
+file with:
 
 ```bash
 sops users/seeker/ai.secrets.json
 ```
 
-When `programs.ai.enable` is set, Home Manager deploys those values on
-`miLaptop`, `DiagonAlley`, `devVM`, `nixos-wsl`, `gpu01`, `Hippogriff`,
-`mi15`, and
-`miPad` as:
+When `programs.ai.enable` is set, Home Manager installs:
 
-- Codex: `~/.codex/auth.json` (`OPENAI_API_KEY`) and session `OPENAI_API_KEY`
-- Grok: session `XAI_API_KEY`
-- Kimi: session `KIMI_API_KEY`. `~/.kimi-code/config.toml` is local runtime
-  state, like `~/.codex/config.toml`.
+- Codex (`agents.codex`) and, with `programs.ai.omp.enable`, OMP
+  (`agents.omp`).
+- `~/.omp/agent/models.yml` with only `deepseek-official` and `claude-code`.
+- Session variables `CLAUDE_CODE_API_KEY` and `DEEPSEEK_OFFICIAL_API_KEY` from
+  the `ai-env` template.
 
-The keyless development container deliberately does not import this secret
-module and forces `programs.ai.enable` off. `burrow` does not receive the
-relay credentials.
+Grok and Kimi are no longer installed, and the OpenAI relay is no longer
+configured. The keyless development container forces `programs.ai.enable`
+off. `burrow` does not receive these credentials.
 
 ## Taskwarrior synchronization
 
@@ -154,8 +150,8 @@ local persistent connection profile and are not managed by SOPS.
 Install the dedicated Hippogriff identity from `.secrets/age/Hippogriff.txt`
 out of band at `/home/seeker/.config/sops/age/keys.txt` (owner `seeker`, mode
 `0600`) before its first activation. It decrypts its own SSH client key, the
-shared external and GitHub keys, the administrator SSH key, the AI relay
-file, the shared nix configuration, and the Taskwarrior sync pair. See
+shared external and GitHub keys, the administrator SSH key, the AI provider
+credentials, the shared nix configuration, and the Taskwarrior sync pair. See
 `docs/maintenance/hippogriff.md` for the build, update, and rollback workflow.
 
 Before the first activation on an existing `miLaptop`, copy the old
