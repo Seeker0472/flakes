@@ -9,9 +9,11 @@ mihomo proxy chain. It runs only:
 
 It deliberately does not fetch airport subscriptions, run TUN/fake-ip DNS, or
 host any King'sCross service (NetBird server, TaskChampion, nginx/ACME).
-The chain logic stays on the clients for now: a client mihomo proxy can add
-`dialer-proxy` pointing at an airport group, so the path is
-`client -> airport -> Willow -> target`.
+The chain logic lives on the clients: the client mihomo profile connects
+through a fixed airport entry and `dialer-proxy` to Willow, so the path is
+`client -> airport -> Willow -> target`. OpenAI/Codex domains are routed to
+Willow with no `DIRECT` fallback; IPv6 is disabled both in mihomo and on the
+mihomo hosts.
 
 ## First install
 
@@ -111,10 +113,20 @@ If the VM or its SSH host key is replaced, derive the new age recipient with
 sops updatekeys -y hosts/Willow/mihomo.secrets.yaml
 ```
 
-## Client chain (not applied yet)
+## Client chain
 
-The Willow server is ready; the client mihomo configuration is intentionally
-untouched. When adding the chain, the proxy entry looks like:
+`modules/profiles/programs/mihomo/mihomo.nix` adds:
+
+- a `Willow` Shadowsocks 2022 proxy using the shared
+  `willow_ss_password` secret;
+- a fixed `Chain-Entry` select group over `airport_ikuuu` (choose one node
+  with good connectivity to GCP);
+- fail-closed `DOMAIN-SUFFIX` rules for OpenAI/Codex/ChatGPT and their
+  third-party assets, all targeting `Willow`;
+- a remote-DoH policy for those domains, with `DOMAIN,dns.google,Willow`;
+- `ipv6: false`, plus `networking.enableIPv6 = false` on hosts with mihomo.
+
+The proxy entry is:
 
 ```yaml
 proxies:
@@ -125,13 +137,18 @@ proxies:
     cipher: 2022-blake3-aes-256-gcm
     password: <willow_ss_password>
     udp: false
-    dialer-proxy: Auto-Fast-ikuuu  # or another airport group
+    dialer-proxy: Chain-Entry
 ```
 
 `dialer-proxy` makes the airport node dial Willow, so the exit address seen
 by targets is Willow's, while the local ISP only sees the airport connection.
-Start with TCP only: airport relays may not forward UDP or TLS-camouflage
-protocols correctly.
+The chain is TCP-only: airport relays may not forward UDP or TLS-camouflage
+protocols correctly. Disable QUIC in the ChatGPT browser profile and keep
+WebRTC disabled to avoid leaks.
+
+Codex itself uses the official OpenAI endpoint (`codex login`), not the
+allrouter relay. The OMP `claude-code` provider is the only remaining rustcat
+consumer and uses `CLAUDE_CODE_API_KEY`.
 
 ## Verification
 
