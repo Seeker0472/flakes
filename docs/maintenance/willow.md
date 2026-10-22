@@ -150,6 +150,14 @@ Codex itself uses the official OpenAI endpoint (`codex login`), not the
 allrouter relay. The OMP `claude-code` provider is the only remaining rustcat
 consumer and uses `CLAUDE_CODE_API_KEY`.
 
+The same rule set covers the native ChatGPT apps: `android.chat.openai.com`,
+`desktop.chat.openai.com`, `ios.chat.openai.com`, and
+`tcr9i.chat.openai.com` are under `*.openai.com`; `humb.apple.com` is the
+macOS/iOS App Attest endpoint. The NixOS module only configures NixOS hosts;
+a macOS or Android mihomo client must import the same `Willow` proxy,
+`Chain-Entry` group, and domain rules. Text and WebSocket traffic is TCP and
+works through the Shadowsocks chain; voice/UDP may need a UDP-capable relay.
+
 ## Verification
 
 ```bash
