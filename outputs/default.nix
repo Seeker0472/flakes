@@ -7,5 +7,6 @@
     ./deploy.nix
     ./devshell.nix
     ./dev-container-image.nix
+    ./clients.nix
   ];
 }
