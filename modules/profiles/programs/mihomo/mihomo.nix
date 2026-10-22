@@ -238,6 +238,8 @@ let
       - DOMAIN,js.stripe.com,Willow
       - DOMAIN-SUFFIX,ct.sendgrid.net,Willow
       - DOMAIN,challenges.cloudflare.com,Willow
+      # macOS/iOS App Attest
+      - DOMAIN,humb.apple.com,Willow
       - DOMAIN,o207216.ingest.sentry.io,Willow
       - DOMAIN,o33249.ingest.sentry.io,Willow
       - DOMAIN,rum.browser-intake-datadoghq.com,Willow
