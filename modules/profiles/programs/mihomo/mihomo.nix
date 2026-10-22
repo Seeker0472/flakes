@@ -118,8 +118,12 @@ let
         "+.oaistatsig.com": [https://dns.google/dns-query]
         "+.intercom.io": [https://dns.google/dns-query]
         "+.intercomcdn.com": [https://dns.google/dns-query]
-        "+.workos.com": [https://dns.google/dns-query]
-        "+.workoscdn.com": [https://dns.google/dns-query]
+        "cdn.workos.com": [https://dns.google/dns-query]
+        "forwarder.workos.com": [https://dns.google/dns-query]
+        "frontend-apps-multi-region.workos.com": [https://dns.google/dns-query]
+        "setup.workos.com": [https://dns.google/dns-query]
+        "images.workoscdn.com": [https://dns.google/dns-query]
+        "workos.imgix.net": [https://dns.google/dns-query]
         "+.ct.sendgrid.net": [https://dns.google/dns-query]
 
       nameserver:
@@ -225,8 +229,11 @@ let
       - DOMAIN-SUFFIX,oaistatsig.com,Willow
       - DOMAIN-SUFFIX,intercom.io,Willow
       - DOMAIN-SUFFIX,intercomcdn.com,Willow
-      - DOMAIN-SUFFIX,workos.com,Willow
-      - DOMAIN-SUFFIX,workoscdn.com,Willow
+      - DOMAIN,cdn.workos.com,Willow
+      - DOMAIN,forwarder.workos.com,Willow
+      - DOMAIN,frontend-apps-multi-region.workos.com,Willow
+      - DOMAIN,setup.workos.com,Willow
+      - DOMAIN,images.workoscdn.com,Willow
       - DOMAIN,workos.imgix.net,Willow
       - DOMAIN,js.stripe.com,Willow
       - DOMAIN-SUFFIX,ct.sendgrid.net,Willow
@@ -234,10 +241,8 @@ let
       - DOMAIN,humb.apple.com,Willow
       - DOMAIN,o207216.ingest.sentry.io,Willow
       - DOMAIN,o33249.ingest.sentry.io,Willow
-      - DOMAIN,o33249.ingest.us.sentry.io,Willow
       - DOMAIN,rum.browser-intake-datadoghq.com,Willow
-      - DOMAIN-SUFFIX,openaimerge.com,Willow
-      - DOMAIN,auth.api.openai.org,Willow
+      - DOMAIN,cdn.openaimerge.com,Willow
       - GEOSITE,category-ads-all,REJECT
       - DOMAIN,${netbirdHost},DIRECT
       - DOMAIN-SUFFIX,lan,DIRECT
