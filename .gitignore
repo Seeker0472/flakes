@@ -10,6 +10,8 @@ docs/*
 !docs/installation.md
 !docs/maintenance/
 !docs/maintenance/**
+!docs/clients/
+!docs/clients/**
 .humanize/auto-rlcr-cache/
 .humanize/bitlesson.md
 .humanize/.pending-session-id

@@ -1,0 +1,53 @@
+// Clash Verge Script for users who already have a subscription profile.
+// Replace <WILLOW_SS_PASSWORD>. Only OpenAI/Codex domains are sent to
+// Willow; the base profile handles every other rule.
+//
+// In Clash Verge: Profiles -> your profile -> Script -> paste this file.
+
+function main(config) {
+  const willow = {
+    name: "Willow",
+    type: "ss",
+    server: "8.229.8.238",
+    port: 28443,
+    cipher: "2022-blake3-aes-256-gcm",
+    password: "<WILLOW_SS_PASSWORD>",
+    udp: true,
+  };
+
+  const rules = [
+    "DOMAIN-SUFFIX,openai.com,Willow-Chain",
+    "DOMAIN-SUFFIX,chatgpt.com,Willow-Chain",
+    "DOMAIN-SUFFIX,oaistatic.com,Willow-Chain",
+    "DOMAIN-SUFFIX,oaiusercontent.com,Willow-Chain",
+    "DOMAIN-SUFFIX,oaistatsig.com,Willow-Chain",
+    "DOMAIN-SUFFIX,intercom.io,Willow-Chain",
+    "DOMAIN-SUFFIX,intercomcdn.com,Willow-Chain",
+    "DOMAIN,cdn.workos.com,Willow-Chain",
+    "DOMAIN,forwarder.workos.com,Willow-Chain",
+    "DOMAIN,frontend-apps-multi-region.workos.com,Willow-Chain",
+    "DOMAIN,setup.workos.com,Willow-Chain",
+    "DOMAIN,images.workoscdn.com,Willow-Chain",
+    "DOMAIN,workos.imgix.net,Willow-Chain",
+    "DOMAIN,js.stripe.com,Willow-Chain",
+    "DOMAIN-SUFFIX,ct.sendgrid.net,Willow-Chain",
+    "DOMAIN,challenges.cloudflare.com,Willow-Chain",
+    "DOMAIN,humb.apple.com,Willow-Chain",
+    "DOMAIN,o207216.ingest.sentry.io,Willow-Chain",
+    "DOMAIN,o33249.ingest.sentry.io,Willow-Chain",
+    "DOMAIN,rum.browser-intake-datadoghq.com,Willow-Chain",
+    "DOMAIN,cdn.openaimerge.com,Willow-Chain",
+  ];
+
+  config.proxies = [willow, ...(config.proxies || [])];
+  config["proxy-groups"] = [
+    {
+      name: "Willow-Chain",
+      type: "select",
+      proxies: ["Willow", "DIRECT"],
+    },
+    ...(config["proxy-groups"] || []),
+  ];
+  config.rules = [...rules, ...(config.rules || [])];
+  return config;
+}
