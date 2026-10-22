@@ -73,7 +73,7 @@ let
     mode: rule
     log-level: info
     external-controller: 127.0.0.1:${toString externalControllerPort}
-    ipv6: true
+    ipv6: false
     keep-alive-interval: 30
     keep-alive-idle: 60
     find-process-mode: off
@@ -111,6 +111,16 @@ let
         "geosite:cn": [https://doh.pub/dns-query, https://dns.alidns.com/dns-query]
         "geosite:category-ads-all": rcode://success
         "geosite:gfw": [https://dns.google/dns-query, https://1.1.1.1/dns-query]
+        "+.openai.com": [https://dns.google/dns-query]
+        "+.chatgpt.com": [https://dns.google/dns-query]
+        "+.oaistatic.com": [https://dns.google/dns-query]
+        "+.oaiusercontent.com": [https://dns.google/dns-query]
+        "+.oaistatsig.com": [https://dns.google/dns-query]
+        "+.intercom.io": [https://dns.google/dns-query]
+        "+.intercomcdn.com": [https://dns.google/dns-query]
+        "+.workos.com": [https://dns.google/dns-query]
+        "+.workoscdn.com": [https://dns.google/dns-query]
+        "+.ct.sendgrid.net": [https://dns.google/dns-query]
 
       nameserver:
         - https://doh.pub/dns-query
@@ -157,6 +167,16 @@ let
   '';
 
   providersAndRules = ''
+    proxies:
+      - name: Willow
+        type: ss
+        server: 8.229.8.238
+        port: 28443
+        cipher: 2022-blake3-aes-256-gcm
+        password: "${config.sops.placeholder.willow_ss_password}"
+        udp: false
+        dialer-proxy: Chain-Entry
+
     proxy-providers:
       airport_mojie:
         type: http
@@ -173,6 +193,10 @@ let
         health-check: { enable: true, interval: 600, url: http://www.gstatic.com/generate_204 }
 
     proxy-groups:
+      - name: "Chain-Entry"
+        type: select
+        use: [airport_ikuuu]
+
       - name: "Auto-Fast-ALL"
         type: url-test
         url: 'http://www.gstatic.com/generate_204'
@@ -193,6 +217,27 @@ let
         proxies: ["Auto-Fast-ikuuu", "Auto-Fast-ALL", DIRECT]
 
     rules:
+      - DOMAIN,dns.google,Willow
+      - DOMAIN-SUFFIX,openai.com,Willow
+      - DOMAIN-SUFFIX,chatgpt.com,Willow
+      - DOMAIN-SUFFIX,oaistatic.com,Willow
+      - DOMAIN-SUFFIX,oaiusercontent.com,Willow
+      - DOMAIN-SUFFIX,oaistatsig.com,Willow
+      - DOMAIN-SUFFIX,intercom.io,Willow
+      - DOMAIN-SUFFIX,intercomcdn.com,Willow
+      - DOMAIN-SUFFIX,workos.com,Willow
+      - DOMAIN-SUFFIX,workoscdn.com,Willow
+      - DOMAIN,workos.imgix.net,Willow
+      - DOMAIN,js.stripe.com,Willow
+      - DOMAIN-SUFFIX,ct.sendgrid.net,Willow
+      - DOMAIN,challenges.cloudflare.com,Willow
+      - DOMAIN,humb.apple.com,Willow
+      - DOMAIN,o207216.ingest.sentry.io,Willow
+      - DOMAIN,o33249.ingest.sentry.io,Willow
+      - DOMAIN,o33249.ingest.us.sentry.io,Willow
+      - DOMAIN,rum.browser-intake-datadoghq.com,Willow
+      - DOMAIN-SUFFIX,openaimerge.com,Willow
+      - DOMAIN,auth.api.openai.org,Willow
       - GEOSITE,category-ads-all,REJECT
       - DOMAIN,${netbirdHost},DIRECT
       - DOMAIN-SUFFIX,lan,DIRECT
@@ -242,6 +287,8 @@ in
     }
 
     (lib.mkIf (cfg.enable && deploySecrets) {
+      networking.enableIPv6 = false;
+
       networking.proxy = lib.mkIf (!cfg.tun.enable) {
         default = "http://localhost:${toString httpPort}";
         noProxy = "127.0.0.1,localhost,::1,.lan,.local";
@@ -268,6 +315,7 @@ in
         airport_mojie_url.sopsFile = ./mihomo.secrets.yaml;
         airport_ikuuu_url.sopsFile = ./mihomo.secrets.yaml;
         mihomo_secret.sopsFile = ./mihomo.secrets.yaml;
+        willow_ss_password.sopsFile = ./mihomo.secrets.yaml;
       };
 
       sops.templates."mihomo-config.yaml" = {
