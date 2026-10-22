@@ -8,6 +8,7 @@ let
   cfg = config.machine.programs.mihomo;
   deploySecrets = config.machine.secrets.deploy;
   tunInterface = "Meta";
+  willow = import ./willow.nix;
 
   httpPort = 7890;
   socksPort = 7891;
@@ -172,13 +173,13 @@ let
 
   providersAndRules = ''
     proxies:
-      - name: Willow
+      - name: ${willow.name}
         type: ss
-        server: 8.229.8.238
-        port: 28443
-        cipher: 2022-blake3-aes-256-gcm
+        server: ${willow.server}
+        port: ${toString willow.port}
+        cipher: ${willow.cipher}
         password: "${config.sops.placeholder.willow_ss_password}"
-        udp: true
+        udp: ${lib.boolToString willow.udp}
         dialer-proxy: Chain-Entry
 
     proxy-providers:
@@ -221,29 +222,7 @@ let
         proxies: ["Auto-Fast-ikuuu", "Auto-Fast-ALL", DIRECT]
 
     rules:
-      - DOMAIN,dns.google,Willow
-      - DOMAIN-SUFFIX,openai.com,Willow
-      - DOMAIN-SUFFIX,chatgpt.com,Willow
-      - DOMAIN-SUFFIX,oaistatic.com,Willow
-      - DOMAIN-SUFFIX,oaiusercontent.com,Willow
-      - DOMAIN-SUFFIX,oaistatsig.com,Willow
-      - DOMAIN-SUFFIX,intercom.io,Willow
-      - DOMAIN-SUFFIX,intercomcdn.com,Willow
-      - DOMAIN,cdn.workos.com,Willow
-      - DOMAIN,forwarder.workos.com,Willow
-      - DOMAIN,frontend-apps-multi-region.workos.com,Willow
-      - DOMAIN,setup.workos.com,Willow
-      - DOMAIN,images.workoscdn.com,Willow
-      - DOMAIN,workos.imgix.net,Willow
-      - DOMAIN,js.stripe.com,Willow
-      - DOMAIN-SUFFIX,ct.sendgrid.net,Willow
-      - DOMAIN,challenges.cloudflare.com,Willow
-      # macOS/iOS App Attest
-      - DOMAIN,humb.apple.com,Willow
-      - DOMAIN,o207216.ingest.sentry.io,Willow
-      - DOMAIN,o33249.ingest.sentry.io,Willow
-      - DOMAIN,rum.browser-intake-datadoghq.com,Willow
-      - DOMAIN,cdn.openaimerge.com,Willow
+    ${lib.concatMapStringsSep "\n" (rule: "  - ${rule}") (willow.openaiRules willow.name)}
       - GEOSITE,category-ads-all,REJECT
       - DOMAIN,${netbirdHost},DIRECT
       - DOMAIN-SUFFIX,lan,DIRECT
