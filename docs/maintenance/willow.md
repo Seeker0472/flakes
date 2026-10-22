@@ -26,7 +26,7 @@ nix \
   --option fallback true \
   run github:nix-community/nixos-anywhere -- \
   --flake "path:$PWD#Willow" \
-  --target-host seeker@35.212.143.247 \
+  --target-host seeker@8.229.8.238 \
   -i /home/seeker/.ssh/id_external \
   --copy-host-keys
 ```
@@ -43,7 +43,7 @@ bootstrap account; after installation, root and `seeker` authorize
 nix run .#deploy-rs -- .#willow
 ```
 
-The deploy node uses `root@35.212.143.247`. Keep the GCP console reachable
+The deploy node uses `root@8.229.8.238`. Keep the GCP console reachable
 while changing networking, SSH, the kernel, or the boot loader.
 
 ## GCP networking
@@ -63,7 +63,7 @@ gcloud compute firewall-rules create willow-mihomo \
   --description="Willow Shadowsocks 2022 exit"
 ```
 
-The VM's external address is currently `35.212.143.247`. It is not reserved;
+The VM's external address is currently `8.229.8.238`. It is not reserved;
 if the address must survive VM recreation, reserve a static external IP and
 update `outputs/deploy.nix` and the client configuration.
 
@@ -74,7 +74,7 @@ but does not enroll it. Enroll once with a setup key from the NetBird
 dashboard:
 
 ```bash
-ssh root@35.212.143.247
+ssh root@8.229.8.238
 netbird up \
   --management-url https://netbird.vps.seekerer.com:28443 \
   --setup-key <setup-key>
@@ -101,7 +101,7 @@ sops hosts/Willow/mihomo.secrets.yaml
 The REST API listens on `127.0.0.1:9090` only. Reach it through an SSH tunnel:
 
 ```bash
-ssh -L 9090:127.0.0.1:9090 root@35.212.143.247
+ssh -L 9090:127.0.0.1:9090 root@8.229.8.238
 ```
 
 If the VM or its SSH host key is replaced, derive the new age recipient with
@@ -120,7 +120,7 @@ untouched. When adding the chain, the proxy entry looks like:
 proxies:
   - name: Willow
     type: ss
-    server: 35.212.143.247
+    server: 8.229.8.238
     port: 28443
     cipher: 2022-blake3-aes-256-gcm
     password: <willow_ss_password>
@@ -136,7 +136,7 @@ protocols correctly.
 ## Verification
 
 ```bash
-ssh root@35.212.143.247 'systemctl status mihomo netbird --no-pager'
-ssh root@35.212.143.247 'ss -lntp | grep 28443'
-nc -vz 35.212.143.247 28443   # after the GCP firewall rule exists
+ssh root@8.229.8.238 'systemctl status mihomo netbird --no-pager'
+ssh root@8.229.8.238 'ss -lntp | grep 28443'
+nc -vz 8.229.8.238 28443   # after the GCP firewall rule exists
 ```

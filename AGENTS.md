@@ -39,7 +39,7 @@ updates: it may run Disko and erase the VPS disk.
 ## Willow
 
 The proxy-exit VPS is `nixosConfigurations.Willow` and targets
-`root@35.212.143.247`. Follow [the maintenance workflow](docs/maintenance/willow.md)
+`root@8.229.8.238`. Follow [the maintenance workflow](docs/maintenance/willow.md)
 for changes. Its SOPS identity is derived from the SSH host key, so the
 initial `nixos-anywhere` install must use `--copy-host-keys`; routine updates
 use deploy-rs and must not partition the disk.

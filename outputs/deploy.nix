@@ -102,7 +102,7 @@ in
       hostName = "Willow";
       # GCP ephemeral external address; replace with a static IP or DNS name
       # if the VM is recreated or the lease changes.
-      hostname = "35.212.143.247";
+      hostname = "8.229.8.238";
       sshUser = "root";
       sshOpts = [
         "-4"
