@@ -12,7 +12,9 @@ consumed by that host. `DiagonAlley`, `Hippogriff`, and `burrow` also receive
 the administrator SSH key so they retain VPS maintenance access.
 `Hippogriff` additionally consumes the shared external/GitHub keys, the AI
 relay file, the shared nix configuration, the Taskwarrior pair, and the shared
-Mihomo configuration. `burrow`
+Mihomo configuration. `Willow` has a host-scoped
+`hosts/Willow/mihomo.secrets.yaml` and does not receive the shared airport
+subscriptions. `burrow`
 deliberately does not
 receive the shared external, GitHub, or AI relay credentials.
 `gpu01` has a separate runtime identity, scoped to the shared external and
@@ -28,6 +30,13 @@ key (`sops.age.sshKeyPaths` in `hosts/KingsCross/netbird.nix`), so
 replaced, refresh the anchor in `.sops.yaml` and run `sops updatekeys -y` on
 `hosts/KingsCross/netbird.secrets.yaml` and
 `users/seeker/taskwarrior.secrets.yaml`.
+
+`Willow` likewise has no age key file: `hosts/Willow/mihomo.nix` reads the VPS
+SSH host key, so `willow_age` must equal its `ssh-to-age` form. The initial
+`nixos-anywhere` install copies the Debian host key with `--copy-host-keys`.
+`hosts/Willow/mihomo.secrets.yaml` holds the Shadowsocks 2022 password and the
+mihomo controller secret. If the VM or host key is replaced, refresh the anchor
+in `.sops.yaml` and run `sops updatekeys -y hosts/Willow/mihomo.secrets.yaml`.
 
 The bootstrap identities live under the git-ignored `.secrets/age/` directory.
 The SOPS identity itself must be installed out of band because it cannot decrypt
@@ -130,6 +139,11 @@ The nix-on-droid environment is configured with the `seeker` username; the
 underlying Android app UID remains managed by Android. It does not provide a
 system OpenSSH daemon, so these configurations manage outbound SSH client
 access only.
+
+Willow needs no manual identity install: the `nixos-anywhere --copy-host-keys`
+step preserves the host key that `willow_age` was derived from. See
+`docs/maintenance/willow.md` for the install, GCP firewall, and NetBird
+enrollment steps.
 
 Install the dedicated burrow identity from `.secrets/age/burrow.txt` out of
 band at `/home/seeker/.config/sops/age/keys.txt` before its first activation.

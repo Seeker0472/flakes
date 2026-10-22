@@ -2,13 +2,14 @@
 
 ## Deployment
 
-Routine deployments of `miLaptop`, `King'sCross` and `Hippogriff` use deploy-rs
-from this flake - the repository's recommended default:
+Routine deployments of `miLaptop`, `King'sCross`, `Hippogriff` and `Willow`
+use deploy-rs from this flake - the repository's recommended default:
 
 ```bash
 nix run .#deploy-rs -- .#miLaptop
 nix run .#deploy-rs -- .#kingsCross
 nix run .#deploy-rs -- .#hippogriff
+nix run .#deploy-rs -- .#willow
 ```
 
 Mode switches stay inside deploy-rs (`--dry-activate`, `--remote-build`,
@@ -34,3 +35,11 @@ for changes. Keep the provider console reachable while deploying changes to
 networking, SSH, the kernel, or boot settings: rollback covers a lost SSH
 connection, not every failure mode. Do not use `nixos-anywhere` for routine
 updates: it may run Disko and erase the VPS disk.
+
+## Willow
+
+The proxy-exit VPS is `nixosConfigurations.Willow` and targets
+`root@35.212.143.247`. Follow [the maintenance workflow](docs/maintenance/willow.md)
+for changes. Its SOPS identity is derived from the SSH host key, so the
+initial `nixos-anywhere` install must use `--copy-host-keys`; routine updates
+use deploy-rs and must not partition the disk.

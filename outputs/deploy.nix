@@ -98,6 +98,29 @@ in
       ];
     };
 
+    willow = mkNode "x86_64-linux" {
+      hostName = "Willow";
+      # GCP ephemeral external address; replace with a static IP or DNS name
+      # if the VM is recreated or the lease changes.
+      hostname = "35.212.143.247";
+      sshUser = "root";
+      sshOpts = [
+        "-4"
+        "-i"
+        key
+        "-o"
+        "IdentitiesOnly=yes"
+        "-o"
+        "BatchMode=yes"
+        "-o"
+        "ConnectTimeout=30"
+        "-o"
+        "ServerAliveInterval=10"
+        "-o"
+        "ServerAliveCountMax=6"
+      ];
+    };
+
     hippogriff = mkNode "aarch64-linux" {
       hostName = "Hippogriff";
       hostname = "192.168.11.132"; # current lease; override with --hostname <ip>

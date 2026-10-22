@@ -4,6 +4,7 @@ keys:
   - &dev_vm_age age1jj0p70p8jtg2vmfmnyrq0fxpwepmqk0dqlnwr0vnucnv08y9fsfq7a5yjr
   - &gpu01_age age10fuvaphy9qmn8csm6vz5v2mzec8pjasz78ed9us7yq5y54hvv4jqjfn6qk
   - &kings_cross_age age1scvz5m0l2e4kcy72se206vwg46r8wtty8t6ql3hatqru3dwlsyusg0nnw5
+  - &willow_age age10fcjq0vqvy7j2qtd34wds5zay5qrg88nggnr3st3vd79yqz7jdss6sl0jz
   - &diagonal_alley_age age17wfs54f8c6a3f02gv70l0yz5p6q80cjuvpx46c89e3tz6v5dtauq9jwsfu
   - &mi15_age age10mpqu7qyk22ny6ayy7yn36qq0y70tmr2475rzn6qxycx3jlgqyzs8plm8a
   - &mi_pad_age age1mz6cjamtwnqulrzazmm8aatyzx9e9f4g5xurq5yqavn58p5prghqn2xhkk
@@ -18,6 +19,15 @@ creation_rules:
           - *admin_seeker_age
           - *recovery_age
           - *kings_cross_age
+
+  - path_regex: hosts/Willow/.*secrets\.yaml$
+    unencrypted_suffix: _unencrypted
+    key_groups:
+      - age:
+          - *admin_seeker_age
+          - *recovery_age
+          - *diagonal_alley_age
+          - *willow_age
 
   - path_regex: users/seeker/ssh/admin\.secrets\.json$
     unencrypted_suffix: _unencrypted

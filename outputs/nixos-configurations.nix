@@ -37,6 +37,10 @@ let
       hostDir = ../hosts/KingsCross;
       bundle = ../modules/bundles/server.nix;
     };
+    Willow = {
+      hostDir = ../hosts/Willow;
+      bundle = ../modules/bundles/server.nix;
+    };
     burrow = {
       bundle = ../modules/bundles/gateway.nix;
       userModule = ../users/seeker/burrow.nix;
