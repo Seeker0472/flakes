@@ -295,6 +295,9 @@ in
     (lib.mkIf (cfg.enable && deploySecrets) {
       networking.enableIPv6 = false;
 
+      # DynamicUser StateDirectory requires the shared parent to be 0700.
+      systemd.tmpfiles.rules = [ "d /var/lib/private 0700 root root -" ];
+
       networking.proxy = lib.mkIf (!cfg.tun.enable) {
         default = "http://localhost:${toString httpPort}";
         noProxy = "127.0.0.1,localhost,::1,.lan,.local";
