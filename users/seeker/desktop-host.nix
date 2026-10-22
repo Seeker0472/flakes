@@ -20,6 +20,7 @@ in
 {
   imports = [
     ./desktop.nix
+    ./mail.nix
     ./ssh-secrets.nix
     ./taskwarrior-sync.nix
   ];

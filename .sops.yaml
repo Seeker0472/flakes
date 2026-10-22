@@ -123,6 +123,19 @@ creation_rules:
           - *mi_pad_age
           - *hippogriff_age
 
+  - path_regex: users/seeker/smtp\.secrets\.yaml$
+    unencrypted_suffix: _unencrypted
+    key_groups:
+      - age:
+          - *admin_seeker_age
+          - *recovery_age
+          - *dev_vm_age
+          - *gpu01_age
+          - *diagonal_alley_age
+          - *mi15_age
+          - *mi_pad_age
+          - *hippogriff_age
+
   - path_regex: users/seeker/taskwarrior\.secrets\.yaml$
     unencrypted_suffix: _unencrypted
     key_groups:
