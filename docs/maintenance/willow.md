@@ -4,7 +4,7 @@ Willow is the GCP e2-micro VPS that will serve as the final exit of the
 mihomo proxy chain. It runs only:
 
 - OpenSSH, the NetBird client, and the base VPS tooling.
-- mihomo with a Shadowsocks 2022 listener on TCP `28443`, sending all
+- mihomo with a Shadowsocks 2022 listener on TCP/UDP `28443`, sending all
   accepted traffic out `DIRECT`.
 
 It deliberately does not fetch airport subscriptions, run TUN/fake-ip DNS, or
@@ -51,8 +51,8 @@ while changing networking, SSH, the kernel, or the boot loader.
 ## GCP networking
 
 The NixOS firewall opens the reserved `28400-28499` band, but GCP's firewall
-is in front of it. Add an ingress rule for TCP `28443` (the instance has no
-network tags, so a rule without target tags applies to it):
+is in front of it. Add an ingress rule for TCP and UDP `28443` (the instance
+has no network tags, so a rule without target tags applies to it):
 
 ```bash
 gcloud compute firewall-rules create willow-mihomo \
@@ -60,9 +60,17 @@ gcloud compute firewall-rules create willow-mihomo \
   --network=default \
   --direction=INGRESS \
   --action=ALLOW \
-  --rules=tcp:28443 \
+  --rules=tcp:28443,udp:28443 \
   --source-ranges=0.0.0.0/0 \
   --description="Willow Shadowsocks 2022 exit"
+```
+
+If `willow-mihomo` already exists with TCP only, update it:
+
+```bash
+gcloud compute firewall-rules update willow-mihomo \
+  --project=main-512409 \
+  --rules=tcp:28443,udp:28443
 ```
 
 The VM's external address is currently `8.229.8.238`. It is not reserved;
@@ -136,15 +144,16 @@ proxies:
     port: 28443
     cipher: 2022-blake3-aes-256-gcm
     password: <willow_ss_password>
-    udp: false
+    udp: true
     dialer-proxy: Chain-Entry
 ```
 
 `dialer-proxy` makes the airport node dial Willow, so the exit address seen
 by targets is Willow's, while the local ISP only sees the airport connection.
-The chain is TCP-only: airport relays may not forward UDP or TLS-camouflage
-protocols correctly. Disable QUIC in the ChatGPT browser profile and keep
-WebRTC disabled to avoid leaks.
+UDP is enabled on the Willow listener and client proxy, but the airport entry
+must also relay UDP; if it does not, UDP flows fail while TCP still works.
+QUIC can stay enabled only if the airport relays UDP; otherwise disable it in
+the browser profile. WebRTC must stay disabled to avoid STUN leaks.
 
 Codex itself uses the official OpenAI endpoint (`codex login`), not the
 allrouter relay. The OMP `claude-code` provider is the only remaining rustcat
@@ -156,12 +165,14 @@ The same rule set covers the native ChatGPT apps: `android.chat.openai.com`,
 macOS/iOS App Attest endpoint. The NixOS module only configures NixOS hosts;
 a macOS or Android mihomo client must import the same `Willow` proxy,
 `Chain-Entry` group, and domain rules. Text and WebSocket traffic is TCP and
-works through the Shadowsocks chain; voice/UDP may need a UDP-capable relay.
+works through the Shadowsocks chain. Voice uses UDP 3478 to the IP ranges in
+`https://openai.com/chatgpt-voice.json`, not a domain rule; add those ranges
+(and an airport that relays UDP) if voice is required.
 
 ## Verification
 
 ```bash
 ssh root@8.229.8.238 'systemctl status mihomo netbird --no-pager'
-ssh root@8.229.8.238 'ss -lntp | grep 28443'
-nc -vz 8.229.8.238 28443   # after the GCP firewall rule exists
+ssh root@8.229.8.238 'ss -lntup | grep 28443'   # TCP and UDP listeners
+nc -vz 8.229.8.238 28443   # TCP; after the GCP firewall rule exists
 ```

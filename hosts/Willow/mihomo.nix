@@ -47,7 +47,7 @@ in
             port: ${toString ssPort}
             cipher: 2022-blake3-aes-256-gcm
             password: "${config.sops.placeholder.willow_ss_password}"
-            udp: false
+            udp: true
             proxy: DIRECT
 
         rules:
@@ -62,4 +62,5 @@ in
   };
 
   networking.firewall.allowedTCPPorts = [ ssPort ];
+  networking.firewall.allowedUDPPorts = [ ssPort ];
 }

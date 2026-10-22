@@ -178,7 +178,7 @@ let
         port: 28443
         cipher: 2022-blake3-aes-256-gcm
         password: "${config.sops.placeholder.willow_ss_password}"
-        udp: false
+        udp: true
         dialer-proxy: Chain-Entry
 
     proxy-providers:
