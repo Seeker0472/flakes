@@ -1,8 +1,13 @@
-{ config, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 {
   imports = [
     (import ../lib/impermanence-disk.nix {
-      inherit config;
+      inherit config lib pkgs;
       extraDirectories = [
         # QQ/WeChat and other Flatpak-style state lives under the persisted
         # home; nothing host-specific here beyond the systemd coredump dir.

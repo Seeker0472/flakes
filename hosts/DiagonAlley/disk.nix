@@ -1,8 +1,13 @@
-{ config, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 {
   imports = [
     (import ../lib/impermanence-disk.nix {
-      inherit config;
+      inherit config lib pkgs;
       extraDirectories = [
         "/var/lib/systemd"
         "/var/lib/libvirt"

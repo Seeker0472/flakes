@@ -9,6 +9,8 @@
 # which environment.persistence cannot do.
 {
   config,
+  lib,
+  pkgs,
   extraDirectories ? [ ],
   extraUserDirectories ? [ ],
 }:
@@ -67,6 +69,24 @@ in
       ]
       ++ extraUserDirectories;
     };
+  };
+
+  # Impermanence mirrors parent permissions from /persist on every activation.
+  # Fix the backing directory first: a tmpfiles rule for /var/lib/private alone
+  # is undone by that sync, and does not reliably run again during a switch.
+  # Only the shared parent belongs to root; service data keeps DynamicUser's
+  # ownership and must not be changed recursively.
+  system.activationScripts = {
+    preparePersistentPrivateState = {
+      deps = [
+        "users"
+        "groups"
+      ];
+      text = ''
+        ${pkgs.coreutils}/bin/install -d -m 0700 -o root -g root -- ${lib.escapeShellArg "${config.machine.btrfs.impermanence.persistdir}/var/lib/private"}
+      '';
+    };
+    createPersistentStorageDirs.deps = [ "preparePersistentPrivateState" ];
   };
 
   # Existing persistence trees keep their old ownership; repair only the
