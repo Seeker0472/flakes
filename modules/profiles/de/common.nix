@@ -11,7 +11,10 @@ let
   compositorEnabled = cfg.hyprland.enable || cfg.niri.enable;
 in
 {
-  imports = [ ./options.nix ];
+  imports = [
+    ./options.nix
+    ./java.nix
+  ];
 
   config = lib.mkIf compositorEnabled {
     services.displayManager = {
