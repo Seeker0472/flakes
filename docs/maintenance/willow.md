@@ -155,9 +155,8 @@ must also relay UDP; if it does not, UDP flows fail while TCP still works.
 QUIC can stay enabled only if the airport relays UDP; otherwise disable it in
 the browser profile. WebRTC must stay disabled to avoid STUN leaks.
 
-Codex itself uses the official OpenAI endpoint (`codex login`), not the
-allrouter relay. The OMP `claude-code` provider is the only remaining rustcat
-consumer and uses `CLAUDE_CODE_API_KEY`.
+The OMP `claude-code` provider is the only rustcat consumer and uses
+`CLAUDE_CODE_API_KEY`.
 
 The same rule set covers the native ChatGPT apps: `android.chat.openai.com`,
 `desktop.chat.openai.com`, `ios.chat.openai.com`, and

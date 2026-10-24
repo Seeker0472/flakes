@@ -70,10 +70,7 @@ private key. SOPS still remains the single source for each key pair.
 - `claude_code_api_key` — allrouter.cc key used by OMP's `claude-code` provider
 - `deepseek_official_api_key` — official DeepSeek API (`api.deepseek.com`)
 
-Codex uses the official OpenAI endpoint and ChatGPT login. It has no
-`OPENAI_BASE_URL` or API-key template; run `codex login` and the token is
-stored in `~/.codex/auth.json` (a regular persisted file). Edit the secrets
-file with:
+Edit the secrets file with:
 
 ```bash
 sops users/seeker/ai.secrets.json
@@ -87,9 +84,8 @@ When `programs.ai.enable` is set, Home Manager installs:
 - Session variables `CLAUDE_CODE_API_KEY` and `DEEPSEEK_OFFICIAL_API_KEY` from
   the `ai-env` template.
 
-Grok and Kimi are no longer installed, and the OpenAI relay is no longer
-configured. The keyless development container forces `programs.ai.enable`
-off. `burrow` does not receive these credentials.
+The keyless development container forces `programs.ai.enable` off. `burrow`
+does not receive these credentials.
 
 ## Taskwarrior synchronization
 

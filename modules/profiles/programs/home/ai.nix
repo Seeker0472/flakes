@@ -52,8 +52,8 @@ in
 
       home.packages = [ agents.omp ];
 
-      # OMP keeps provider names explicit.  Only the Claude Code rustcat
-      # provider remains; Codex itself uses the official OpenAI endpoint.
+      # OMP keeps provider names explicit; only the Claude Code rustcat
+      # provider remains.
       home.file.".omp/agent/models.yml".text = ''
         providers:
           deepseek-official:
