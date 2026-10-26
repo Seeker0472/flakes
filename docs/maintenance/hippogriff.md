@@ -1,47 +1,63 @@
 # Hippogriff (Xiaomi Pad 6 Pro, liuqin)
 
 Hippogriff is the Xiaomi Pad 6 Pro (`xiaomi,liuqin`, SM8475, aarch64). The
-community port is consumed as the `liuqin` flake input
-(`github:Seeker0472/liuqin-nixos`); `outputs/nixos-configurations.nix` applies
-its hardware module and package overlay and deliberately leaves the device
-packages (kernel, U-Boot, firmware) native aarch64 instead of injecting the
-port's x86_64→aarch64 cross set, so the tablet can build and replace its own
-boot chain. The tablet keeps Android in `userdata` and boots NixOS from the
-`linux` partition through U-Boot's extlinux generation menu.
+community port is consumed as the `liuqin` flake input. Two configurations
+share the same hardware, tablet bundle and user modules:
+
+- `Hippogriff` applies the port overlay directly. Device packages are native
+  aarch64, so the tablet can build and replace its own boot chain.
+- `HippogriffFast` additionally applies `overlay-inject.nix` with
+  `liuqin.lib.pkgsArm`. The manifest's kernel, U-Boot, firmware and sensor
+  packages are host-built x86_64→aarch64 outputs; the remaining system stays
+  native aarch64.
+
+The tablet keeps Android in `userdata` and boots NixOS from the `linux`
+partition through U-Boot's extlinux generation menu.
 
 ## Build
 
-The kernel and the other device packages (U-Boot, firmware, sensors) are
-native aarch64 derivations, like the per-machine ones (/etc, units, initrd,
-images): they build on the tablet itself, or through binfmt on an x86_64 host
-with qemu-user. Compiling the kernel under emulation is slow; deploys build
-here by default, and `--remote-build` (see [Deploy](#deploy)) makes the tablet
-build instead:
+The release configuration builds device packages on the tablet, or through
+binfmt on an x86_64 host with qemu-user:
 
 ```bash
 nix build .#nixosConfigurations.Hippogriff.config.system.build.toplevel
 ```
 
-## Deploy
-
-Deploy with deploy-rs - the default path for routine updates:
+For the host-built profile used by the fast deploy node:
 
 ```bash
-nix run .#deploy-rs -- .#hippogriff
+nix build .#deploy.nodes.hippogriff-fast.profiles.system.path \
+  --out-link result-hippogriff-fast
 ```
 
-It builds locally (binfmt runs the aarch64 device packages here - slow for the
-kernel - while the unmodified parts come from cache.nixos.org), pushes the
-closure to `seeker@192.168.11.132` over the ssh-ng store, sets
-`/nix/var/nix/profiles/system` and activates with `switch-to-configuration
-switch`, prompting once for the account's sudo password (`interactiveSudo`).
-The unsigned device packages are accepted because `seeker` is in the tablet's
-`nix.settings.trusted-users` (`hosts/Hippogriff/default.nix`). Passing
-`--remote-build` lets the tablet build its own closure instead: only the
-derivation crosses the wire and nothing unsigned is copied. The CLI flag can
-only turn this on for one invocation, not off; `mkNode`'s `remoteBuild`
-argument enables it per node. Both routes realise the same store paths, so
-mixing them does not rebuild what the other side already has.
+`modules/profiles/system/core/common.nix` configures Numtide's binary cache
+and signing key. It supplies the published aarch64 `llm-agents.nix` outputs,
+including Codex and OMP; standard packages use the normal NixOS cache. Local
+liuqin packages are still built locally when their exact output is absent.
+
+Deploy with deploy-rs:
+
+```bash
+# Native device packages; supports --remote-build.
+nix run .#deploy-rs -- .#hippogriff
+
+# Injected cross-built device packages; build on the host.
+nix run .#deploy-rs -- .#hippogriff-fast
+```
+
+Both nodes target `seeker@192.168.11.132` over the ssh-ng store, set
+`/nix/var/nix/profiles/system` and activate with
+`switch-to-configuration switch`, prompting once for the account's sudo
+password (`interactiveSudo`). The unsigned device packages are accepted
+because `seeker` is in the tablet's `nix.settings.trusted-users`
+(`hosts/Hippogriff/default.nix`).
+
+For `hippogriff`, `--remote-build` lets the tablet build its native device
+packages; without it the x86_64 host uses binfmt. Both routes realise the same
+store paths. Do not pass `--remote-build` to `hippogriff-fast`: its injected
+device derivations come from the port's x86_64 cross package set and are
+intended to be realised on the host before copying the closure.
+
 `switch-to-configuration` is the NG implementation here and runs the extlinux
 loader (`system.build.installBootLoader`) for `switch` and `boot` alike, so
 the generation's kernel, initrd, DTB and menu entry are written by the

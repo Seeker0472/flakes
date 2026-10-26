@@ -139,6 +139,25 @@ in
       ];
       interactiveSudo = true;
     };
+
+    hippogriff-fast = mkNode "aarch64-linux" {
+      hostName = "HippogriffFast";
+      hostname = "192.168.11.132"; # current lease; override with --hostname <ip>
+      sshUser = "seeker";
+      # The device packages are injected from the port's cross set, so the
+      # host pre-build is fast; the remaining per-machine aarch64
+      # derivations run through binfmt.  The tablet runs the resulting
+      # closure but cannot rebuild those cross device packages locally.
+      sshOpts = [
+        "-i"
+        key
+        "-o"
+        "IdentitiesOnly=yes"
+        "-o"
+        "ConnectTimeout=10"
+      ];
+      interactiveSudo = true;
+    };
   };
 
   perSystem =

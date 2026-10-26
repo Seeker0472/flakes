@@ -61,10 +61,14 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     liuqin = {
-      url = "github:Seeker0472/liuqin-nixos";
-      # Single nixpkgs across the repository; the port's kernel/device
-      # packages are built against the same toolchain as every other host.
+      # Local OS2.0.4 checkout: deployments consume the reviewed BSP main
+      # branch while proprietary assets remain in their sibling repository.
+      url = "path:/home/seeker/Develop/liuqin/liuqin-nixos";
+      # Share nixpkgs with this configuration.
       inputs.nixpkgs.follows = "nixpkgs";
+      # The port's asset repository is a sibling local input, not a Git subpath.
+      inputs.firmwareAssets.url = "path:/home/seeker/Develop/liuqin/liuqin-nixos-os2-firmware-assets";
+      inputs.firmwareAssets.flake = false;
     };
   };
   outputs =

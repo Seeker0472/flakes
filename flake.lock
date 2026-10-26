@@ -100,6 +100,19 @@
         "type": "github"
       }
     },
+    "firmwareAssets": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1793017116,
+        "narHash": "sha256-aMyPGHyTkc0SHGwyHN/WsFP8upin/9LoOxuCdLOJnnM=",
+        "path": "/home/seeker/Develop/liuqin/liuqin-nixos-os2-firmware-assets",
+        "type": "path"
+      },
+      "original": {
+        "path": "/home/seeker/Develop/liuqin/liuqin-nixos-os2-firmware-assets",
+        "type": "path"
+      }
+    },
     "flake-compat": {
       "flake": false,
       "locked": {
@@ -285,22 +298,20 @@
     },
     "liuqin": {
       "inputs": {
+        "firmwareAssets": "firmwareAssets",
         "nixpkgs": [
           "nixpkgs"
         ]
       },
       "locked": {
-        "lastModified": 1791810094,
-        "narHash": "sha256-KZzAQkDfR1J1HySv4fzfqk8wzs5Axn2MAVEcrCYHbn4=",
-        "owner": "Seeker0472",
-        "repo": "liuqin-nixos",
-        "rev": "73e8071e09880aeb47f0a427b9a65b8cc10927c4",
-        "type": "github"
+        "lastModified": 1793017339,
+        "narHash": "sha256-CPzPOy5MvjZ14K6PUFyjAlpAcNQubp6MOFoVC3RhG/Y=",
+        "path": "/home/seeker/Develop/liuqin/liuqin-nixos",
+        "type": "path"
       },
       "original": {
-        "owner": "Seeker0472",
-        "repo": "liuqin-nixos",
-        "type": "github"
+        "path": "/home/seeker/Develop/liuqin/liuqin-nixos",
+        "type": "path"
       }
     },
     "llm-agents": {

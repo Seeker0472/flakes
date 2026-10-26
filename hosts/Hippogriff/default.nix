@@ -26,12 +26,6 @@ import ../lib/mk-host-module.nix {
           };
           fingerprint.enable = true;
           mipps.enable = true;
-
-          sensors = {
-            # Hash of the stock ROM's vendor/etc/sensors/config archive
-            # (operator-supplied; see the port's docs/PORTING-NOTES.md).
-            sscConfigHash = "sha256-9IzksIEZq8NveGBaD5cBSgzNLCh7KmvdjKnEaubCOdU=";
-          };
         };
 
         # ssh-ng:// store deployments from the build host (nix copy) need
@@ -58,12 +52,6 @@ import ../lib/mk-host-module.nix {
           pkgs.liuqinGnomeFlashlight
           pkgs.liuqinGnomeAutoBrightness
         ];
-
-        # The flash LED has no /dev node, so its brightness attribute is
-        # handed to the camera stack's group directly.
-        services.udev.extraRules = ''
-          SUBSYSTEM=="leds", KERNEL=="white:flash", RUN+="${pkgs.coreutils}/bin/chgrp video /sys/class/leds/white:flash/brightness", RUN+="${pkgs.coreutils}/bin/chmod 0664 /sys/class/leds/white:flash/brightness"
-        '';
 
         programs.dconf.profiles.user.databases = [
           {
