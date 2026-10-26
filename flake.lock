@@ -308,11 +308,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1793018633,
-        "narHash": "sha256-ZV5XPIQI9VIS0Wu22Is0B4PwwwcxHyg3CjM6e2aIw6k=",
+        "lastModified": 1793021145,
+        "narHash": "sha256-a0lSffKlbQv6EI6HDWbHbqWbRPK73HB+iI8OU98PNNM=",
         "owner": "Seeker0472",
         "repo": "liuqin-nixos",
-        "rev": "48a08b7de3d0b7991c494a74e5a6abcfc3062361",
+        "rev": "f6b3787080f00c85a23295ce3f14140848688037",
         "type": "github"
       },
       "original": {

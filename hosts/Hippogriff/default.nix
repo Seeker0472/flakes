@@ -45,11 +45,12 @@ import ../lib/mk-host-module.nix {
         hardware.bluetooth.enable = true;
         services.blueman.enable = true;
 
-        # Audio inspection tools (alsaucm/arecord/amixer/aplay) plus the two
-        # GNOME Quick Settings extensions the port ships.
+        # Audio inspection tools plus the three device-specific GNOME Quick
+        # Settings extensions shipped by the port.
         environment.systemPackages = [
           pkgs.alsa-utils
           pkgs.liuqinGnomeFlashlight
+          pkgs.liuqinGnomeKeyboardBacklight
           pkgs.liuqinGnomeAutoBrightness
         ];
 
@@ -57,6 +58,7 @@ import ../lib/mk-host-module.nix {
           {
             settings."org/gnome/shell".enabled-extensions = [
               "liuqin-flashlight@liuqin"
+              "liuqin-keyboard-backlight@liuqin"
               "liuqin-autobrightness@liuqin"
             ];
           }
