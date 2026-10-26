@@ -61,14 +61,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     liuqin = {
-      # Local OS2.0.4 checkout: deployments consume the reviewed BSP main
-      # branch while proprietary assets remain in their sibling repository.
-      url = "path:/home/seeker/Develop/liuqin/liuqin-nixos";
+      # The BSP lock pins the private firmware-assets repository over GitHub
+      # SSH; this repository only needs to follow the published BSP revision.
+      url = "github:Seeker0472/liuqin-nixos";
       # Share nixpkgs with this configuration.
       inputs.nixpkgs.follows = "nixpkgs";
-      # The port's asset repository is a sibling local input, not a Git subpath.
-      inputs.firmwareAssets.url = "path:/home/seeker/Develop/liuqin/liuqin-nixos-os2-firmware-assets";
-      inputs.firmwareAssets.flake = false;
     };
   };
   outputs =
