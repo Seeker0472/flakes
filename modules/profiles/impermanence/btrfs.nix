@@ -22,7 +22,6 @@ in
           }
         ];
 
-        boot.initrd.systemd.enable = true;
         boot.initrd.supportedFilesystems = [ "btrfs" ];
         boot.initrd.availableKernelModules = [
           "btrfs"
