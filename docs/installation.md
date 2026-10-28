@@ -11,13 +11,42 @@
 
 ## 日常更新
 
-安装完成后，日常更新推荐用 deploy-rs（各机器用法见 `docs/maintenance/`）：
+安装完成后，日常更新使用 deploy-rs；主机专用步骤见 `docs/maintenance/`。
+`outputs/deploy.nix` 仍使用本地名称或 DHCP 租约地址；从其他网络部署 miLaptop 或
+Hippogriff 时，先确认它们的 NetBird 地址并传给 `--hostname`：
 
 ```bash
-nix run .#deploy-rs -- .#miLaptop
+MILAPTOP_ADDR='<verified miLaptop address>'
+HIPPOGRIFF_ADDR='<verified Hippogriff address>'
+nix run .#deploy-rs -- .#miLaptop --hostname "$MILAPTOP_ADDR"
 nix run .#deploy-rs -- .#kingsCross
-nix run .#deploy-rs -- .#hippogriff
+nix run .#deploy-rs -- .#willow
+
+# Hippogriff 两种配置二选一，差异见维护文档。
+nix run .#deploy-rs -- .#hippogriff --hostname "$HIPPOGRIFF_ADDR"
+nix run .#deploy-rs -- .#hippogriff-fast --hostname "$HIPPOGRIFF_ADDR"
 ```
+
+### DiagonAlley 灯光
+
+`openrgb.service` 先探测主板与内存灯，再由用户级 `openrgb-effects.service`
+连接它并加载灯效。用户选择保存在 `~/.local/state/openrgb-control/state.json`
+（impermanence 持久化）；插件的生成配置在 `/run/user/$UID/openrgb-effects`，
+可在重启后重新生成。首次升级会从旧的
+`/run/user/$UID/openrgb-control/state.json` 导入选择。
+
+检查两层服务与 SDK 就绪情况；`status` 中的 `available` 仅表示服务正在运行，
+`wait-server` 会确认 SDK 至少探测到一个控制器：
+
+```bash
+systemctl status openrgb.service
+systemctl --user status openrgb-effects.service
+openrgb-control status
+openrgb-control wait-server
+```
+
+DiagonAlley 不在 deploy-rs 节点列表中；本地修改用
+`sudo nixos-rebuild switch --flake .#DiagonAlley` 激活。
 
 ## 1. SCP 源码和密钥
 

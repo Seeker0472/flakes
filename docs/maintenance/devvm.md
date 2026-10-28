@@ -28,9 +28,9 @@ in place.
 
 ## SOPS Bootstrap
 
-The VM runtime identity is generated out of band at
-`.secrets/age/devVM.txt`. Before expecting system or Home Manager secrets to
-activate, install it inside the VM as:
+See [SECRETS.md](../../SECRETS.md) for identity setup. The VM runtime identity
+is generated out of band at `.secrets/age/devVM.txt`. Before expecting system
+or Home Manager secrets to activate, install it inside the VM as:
 
 ```text
 /home/seeker/.config/sops/age/keys.txt
@@ -61,10 +61,6 @@ sudo systemctl restart sops-nix.service
 systemctl --user restart sops-nix.service
 ```
 
-The devVM identity can decrypt only its own SSH client key, the shared GitHub
-key, and the system secrets consumed by devVM. It cannot decrypt
-administrator, miLaptop, WSL, Mihomo, or King'sCross secrets.
-
 ## Update
 
 Keep one working SSH or console session open while testing changes. From a
@@ -90,11 +86,11 @@ from GRUB or run `sudo nixos-rebuild switch --rollback` from the console.
 
 ## SSH Verification
 
-The `seeker` account accepts the administrator public key and all three
-development client public keys. After Home Manager decrypts the VM-specific
+The `seeker` account accepts the administrator public key and all five client
+public keys (DiagonAlley, miLaptop, devVM, nixos-wsl, Hippogriff). The VM does
+not receive the administrator private key. After Home Manager decrypts its
 client key, outbound development SSH uses `~/.ssh/id_mesh`; other external SSH
-uses `~/.ssh/id_external`; GitHub uses `~/.ssh/id_github`. The VM does not
-receive `id_admin`.
+uses `~/.ssh/id_external`; GitHub uses `~/.ssh/id_github`.
 
 Verify new connections rather than relying only on an existing control socket:
 

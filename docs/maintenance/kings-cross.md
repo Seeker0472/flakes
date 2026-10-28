@@ -1,29 +1,23 @@
 # King'sCross Maintenance
 
-King'sCross is the NixOS configuration for `vps.seekerer.com`. Build and
-activate it from the flake repository; routine updates do not use
+King'sCross configures `vps.seekerer.com`. Routine updates use deploy-rs, not
 `nixos-anywhere`.
 
 ## Deploy
 
-Deploy with deploy-rs - the default path for routine updates; the SSH options
-and the profile live in `flake.deploy.nodes.kingsCross`:
+Deploy-rs is the default; node settings are in `flake.deploy.nodes.kingsCross`:
 
 ```bash
 nix run .#deploy-rs -- .#kingsCross
 ```
 
-It builds locally, pushes the closure to `root@vps.seekerer.com` over the
-ssh-ng store (key `~/.ssh/id_admin`), sets `/nix/var/nix/profiles/system` and
-activates with `switch-to-configuration switch`; that activation installs the
-bootloader as well. deploy-rs' magicRollback activates the new generation
-under a temporary profile first and reverts the profile when the host stops
-answering SSH, so a deploy that cuts the connection rolls back on its own.
-
-Keep the provider console/VNC available while deploying changes to
-networking, SSH, the kernel or the boot loader: rollback covers a lost
-connection, not every failure mode. `switch` normally does not require a
-reboot.
+It builds locally, copies the closure to `root@vps.seekerer.com` over ssh-ng
+(key `~/.ssh/id_admin`), updates `/nix/var/nix/profiles/system`, and runs
+`switch-to-configuration switch` (which installs the bootloader). magicRollback
+reverts the profile if SSH stops responding during activation. Keep the
+provider console/VNC available for networking, SSH, kernel, or bootloader
+changes: rollback does not cover every failure mode. `switch` normally does
+not require a reboot.
 
 Useful switches:
 
@@ -32,13 +26,12 @@ nix run .#deploy-rs -- .#kingsCross --dry-activate  # run activation without set
 nix run .#deploy-rs -- .#kingsCross --skip-checks   # skip the pre-deploy flake checks
 ```
 
-(`--test` exists, but deploy-rs still sets the profile in that mode; it is not
-the same as `nixos-rebuild test`.)
+`--test` still sets the profile; it is not equivalent to
+`nixos-rebuild test`.
 
 ## Fallback without deploy-rs
 
-The previous `nixos-rebuild` flow still works and is the way out if deploy-rs
-is unavailable:
+If deploy-rs is unavailable, use this `nixos-rebuild` fallback:
 
 ```bash
 cd /home/seeker/nixos-config

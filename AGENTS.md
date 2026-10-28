@@ -2,44 +2,31 @@
 
 ## Deployment
 
-Routine deployments of `miLaptop`, `King'sCross`, `Hippogriff` and `Willow`
-use deploy-rs from this flake - the repository's recommended default:
+Use deploy-rs for routine updates:
 
 ```bash
 nix run .#deploy-rs -- .#miLaptop
 nix run .#deploy-rs -- .#kingsCross
-nix run .#deploy-rs -- .#hippogriff
 nix run .#deploy-rs -- .#willow
+nix run .#deploy-rs -- .#hippogriff
 ```
 
-Mode switches stay inside deploy-rs (`--dry-activate`, `--remote-build`,
-`--hostname`, `--skip-checks`); a host this repository deploys over SSH gets a
-`flake.deploy.nodes` entry (see `outputs/deploy.nix`).
-
-deploy-rs builds locally (Hippogriff's device packages are native aarch64 and
-build through binfmt here; `--remote-build` hands that build to the tablet
-instead), then activates with `switch-to-configuration switch`; its
-magicRollback watches the connection and rolls the profile back when a deploy
-cuts it. `miLaptop` and `Hippogriff` prompt for the account's sudo password
-(`interactiveSudo`).
-
-`miLaptop` and `Hippogriff` have no stable address yet (DHCP, no local DNS
-name): pass `--hostname <address>` when the lease moves, until the NetBird
-overlay addresses land (TODO in `.todo.md`).
+Hippogriff also has the `hippogriff-fast` profile; choose one tablet profile per
+update. Pass deploy-rs options such as `--remote-build`, `--dry-activate`, and
+`--skip-checks` to the deploy command. Until `outputs/deploy.nix` uses verified
+NetBird targets, miLaptop and both Hippogriff profiles require
+`--hostname <verified-address>` from machines without local DNS or a matching
+DHCP lease. miLaptop and Hippogriff prompt for the account sudo password.
 
 ## King'sCross
 
-The VPS configuration is `nixosConfigurations."King'sCross"` and targets
-`root@vps.seekerer.com`. Follow [the maintenance workflow](docs/maintenance/kings-cross.md)
-for changes. Keep the provider console reachable while deploying changes to
-networking, SSH, the kernel, or boot settings: rollback covers a lost SSH
-connection, not every failure mode. Do not use `nixos-anywhere` for routine
-updates: it may run Disko and erase the VPS disk.
+The configuration is `nixosConfigurations."King'sCross"`; routine updates use
+deploy-rs, not `nixos-anywhere`. Keep the provider console available for
+networking, SSH, kernel, or boot changes: magicRollback does not cover every
+failure mode. See `docs/maintenance/kings-cross.md`.
 
 ## Willow
 
-The proxy-exit VPS is `nixosConfigurations.Willow` and targets
-`root@8.229.8.238`. Follow [the maintenance workflow](docs/maintenance/willow.md)
-for changes. Its SOPS identity is derived from the SSH host key, so the
-initial `nixos-anywhere` install must use `--copy-host-keys`; routine updates
-use deploy-rs and must not partition the disk.
+Use deploy-rs for routine updates. Its first `nixos-anywhere` installation must
+use `--copy-host-keys` because the SOPS identity derives from the SSH host key.
+Do not repartition during routine updates. See `docs/maintenance/willow.md`.
