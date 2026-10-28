@@ -86,80 +86,20 @@ let
     { fast }:
     let
       liuqin = inputs.liuqin;
-      # The release profile must also evaluate on the aarch64 tablet itself;
-      # the fast profile patches on its x86_64 build host.
-      patchPkgs = inputs.nixpkgs.legacyPackages.${if fast then "x86_64-linux" else "aarch64-linux"};
-      patchedLiuqinSource = patchPkgs.applyPatches {
-        name = "liuqin-nixos-nixos-26.11-initrd";
-        src = liuqin.outPath;
-        patches = [
-          (builtins.toFile "liuqin-initrd-enable.patch" ''
-            diff --git a/modules/liuqin/default.nix b/modules/liuqin/default.nix
-            --- a/modules/liuqin/default.nix
-            +++ b/modules/liuqin/default.nix
-            @@ -240,7 +240,6 @@
-                   };
-
-                   # systemd-based stage 1 is the only supported initrd here.
-            -      boot.initrd.systemd.enable = lib.mkDefault true;
-                   # The device kernel has UFS, SCSI, ext4, IOMMU and the USB/input path
-                   # built in. NixOS' generic initrd module list contains PC-only entries
-                   # such as ata_piix; asking module-rebuild to resolve that list makes a
-            diff --git a/modules/liuqin/initrd-guard.nix b/modules/liuqin/initrd-guard.nix
-            --- a/modules/liuqin/initrd-guard.nix
-            +++ b/modules/liuqin/initrd-guard.nix
-            @@ -103,5 +103,4 @@
-                 boot.initrd.systemd = {
-            -      enable = true;
-                   # The initrd systemd image does not infer these paths from the shell
-                   # text in ExecStart. The guard package and every command it puts on its
-                   # own PATH (its runtimeInputs) must be copied into the image explicitly.
-          '')
-        ];
-      };
-      # NixOS 26.11 removed this no-op option; patch only those obsolete
-      # assignments while retaining the port's initrd guard and other modules.
-      liuqinModule = {
-        imports = [ (patchedLiuqinSource + "/modules/liuqin") ];
-      };
       inject = import (liuqin.outPath + "/overlay-inject.nix") {
         pkgsArm = liuqin.lib.pkgsArm;
       };
-      # buildLinux now presents .config as a read-only store symlink here;
-      # Liuqin's postConfigure appends fragments, so materialize a writable copy.
-      kernelConfigOverlay =
-        _final: prev:
-        let
-          writableKernelConfig =
-            kernel:
-            kernel.overrideAttrs (old: {
-              postConfigure = ''
-                : "''${buildRoot:=build}"
-                cp "$buildRoot/.config" "$buildRoot/.config.tmp"
-                chmod u+w "$buildRoot/.config.tmp"
-                mv "$buildRoot/.config.tmp" "$buildRoot/.config"
-              ''
-              + (old.postConfigure or "");
-            });
-        in
-        {
-          liuqinKernel = writableKernelConfig prev.liuqinKernel;
-          liuqinInstallerKernel = writableKernelConfig prev.liuqinInstallerKernel;
-        };
     in
     lib.nixosSystem {
       system = "aarch64-linux";
       specialArgs = { inherit inputs; };
       modules = [
         {
-          nixpkgs.overlays = [
-            liuqin.overlays.default
-          ]
-          ++ lib.optional fast inject
-          ++ [ kernelConfigOverlay ];
+          # The port module installs its device overlay; injection must follow it.
+          nixpkgs.overlays = lib.mkAfter (lib.optional fast inject);
           nixpkgs.config.allowUnfreePredicate = liuqin.lib.allowLiuqinUnfree;
         }
-        liuqinModule
+        liuqin.nixosModules.liuqin
         ./common/nixpkgs-settings.nix
         ../modules/bundles/tablet.nix
         ../users/seeker/hippogriff.nix

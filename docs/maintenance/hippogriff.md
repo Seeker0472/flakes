@@ -23,17 +23,6 @@ binfmt on an x86_64 host with qemu-user:
 nix build .#nixosConfigurations.Hippogriff.config.system.build.toplevel
 ```
 
-The locked `liuqin` revision still sets the removed
-`boot.initrd.systemd.enable` option in two modules. The Hippogriff configuration
-patches only those obsolete assignments at evaluation time; the port's
-initrd-guard module remains enabled. Drop the local patch when the locked port
-revision removes those assignments itself.
-
-The kernel overlay also copies `.config` to a writable build-tree file before
-Liuqin's `postConfigure` appends its fragments; the locked Nixpkgs build leaves
-it as a read-only store symlink at that point. Remove this compatibility
-overlay once `postConfigure` receives a writable `.config` directly.
-
 For the host-built profile used by the fast deploy node:
 
 ```bash
