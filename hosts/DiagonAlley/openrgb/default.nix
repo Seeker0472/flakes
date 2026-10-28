@@ -18,18 +18,14 @@ let
       fetchSubmodules = true;
     };
   });
-  openrgb = pkgs.openrgb.withPlugins [ effectsPlugin ];
-  controllerVersion = builtins.hashString "sha256" (
-    (builtins.hashFile "sha256" ./controller.py) + (builtins.hashFile "sha256" ./spectrum-cycle.json)
-  );
+  effectsOpenRGB = pkgs.openrgb.withPlugins [ effectsPlugin ];
   controller = pkgs.writeShellApplication {
     name = "openrgb-control";
     runtimeInputs = [ pkgs.python3 ];
     text = ''
       export OPENRGB_CONTROL_TEMPLATE=${./spectrum-cycle.json}
-      export OPENRGB_CONTROL_OPENRGB=${lib.getExe openrgb}
+      export OPENRGB_CONTROL_OPENRGB=${lib.getExe pkgs.openrgb}
       export OPENRGB_CONTROL_SYSTEMCTL=${pkgs.systemd}/bin/systemctl
-      export OPENRGB_CONTROL_CONFIG_VERSION=${controllerVersion}
       exec ${lib.getExe pkgs.python3} ${./controller.py} "$@"
     '';
   };
@@ -42,13 +38,16 @@ in
   services.hardware.openrgb = {
     enable = true;
     motherboard = "amd";
-    package = openrgb;
-    startupProfile = "${./default.orp}";
+    package = pkgs.openrgb;
+    startupProfile = "default";
   };
 
-  # OpenRGB stores resizable zone lengths separately from lighting profiles.
-  # Seed writable runtime state from the declarative profile on each start.
+  # Seed OpenRGB's writable state. OpenRGB 1.1 migrates the legacy .orp
+  # profile from this directory into profiles/default.json before loading it.
   systemd.services.openrgb.preStart = ''
+    ${pkgs.coreutils}/bin/install -m 0644 \
+      ${./default.orp} \
+      /var/lib/OpenRGB/default.orp
     ${pkgs.coreutils}/bin/install -m 0644 \
       ${./sizes.ors} \
       /var/lib/OpenRGB/sizes.ors
@@ -70,9 +69,12 @@ in
         Environment = "OPENRGB_EFFECTS_PLUGIN_STARTUP_PROFILE=${effectsProfile}";
         RuntimeDirectory = "openrgb-effects";
         RuntimeDirectoryMode = "0700";
-        ExecStartPre = "${lib.getExe controller} prepare %t/openrgb-effects";
+        ExecStartPre = [
+          "${lib.getExe controller} wait-server"
+          "${lib.getExe controller} prepare %t/openrgb-effects"
+        ];
         ExecStart = lib.escapeShellArgs [
-          (lib.getExe openrgb)
+          (lib.getExe effectsOpenRGB)
           "--noautoconnect"
           "--client"
           "127.0.0.1:6742"

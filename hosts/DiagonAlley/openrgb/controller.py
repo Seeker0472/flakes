@@ -1,4 +1,4 @@
-"""Session-scoped OpenRGB scene controller for DiagonAlley."""
+"""OpenRGB scene controller with persistent user preferences for DiagonAlley."""
 
 from __future__ import annotations
 
@@ -200,9 +200,8 @@ SCENES: dict[str, dict[str, Any]] = {
 }
 
 
-def default_state(config_version: str) -> dict[str, Any]:
+def default_state() -> dict[str, Any]:
     return {
-        "configVersion": config_version,
         "power": True,
         "scene": "spectrum",
         "brightness": 100,
@@ -220,10 +219,6 @@ def runtime_root() -> Path:
     return Path(runtime) / "openrgb-control"
 
 
-def config_version() -> str:
-    return os.environ.get("OPENRGB_CONTROL_CONFIG_VERSION", "1")
-
-
 def profile_dir(config_dir: Path) -> Path:
     return config_dir / "plugins" / "settings" / "effect-profiles"
 
@@ -239,7 +234,11 @@ def config_dir() -> Path:
 
 
 def state_path() -> Path:
-    return runtime_root() / "state.json"
+    configured = os.environ.get("OPENRGB_CONTROL_STATE_DIR")
+    if configured:
+        return Path(configured) / "state.json"
+    state_home = os.environ.get("XDG_STATE_HOME")
+    return (Path(state_home) if state_home else Path.home() / ".local" / "state") / "openrgb-control" / "state.json"
 
 
 def atomic_json(path: Path, value: Any) -> None:
@@ -307,9 +306,9 @@ def validate_setting(scene: str, key: str, value: Any) -> Any:
 
 
 def normalize_state(value: Any) -> dict[str, Any]:
-    if not isinstance(value, dict) or value.get("configVersion") != config_version():
-        return default_state(config_version())
-    state = default_state(config_version())
+    state = default_state()
+    if not isinstance(value, dict):
+        return state
     scene = value.get("scene", state["scene"])
     if scene in SCENES:
         state["scene"] = scene
@@ -335,11 +334,21 @@ def normalize_state(value: Any) -> dict[str, Any]:
 
 
 def load_state() -> dict[str, Any]:
+    target = state_path()
     try:
-        with state_path().open(encoding="utf-8") as handle:
+        with target.open(encoding="utf-8") as handle:
             return normalize_state(json.load(handle))
-    except (FileNotFoundError, json.JSONDecodeError, OSError):
-        return default_state(config_version())
+    except FileNotFoundError:
+        # Import the old session-only state on the first run after upgrading.
+        if os.environ.get("OPENRGB_CONTROL_STATE_DIR"):
+            return default_state()
+        try:
+            with (runtime_root() / "state.json").open(encoding="utf-8") as handle:
+                return normalize_state(json.load(handle))
+        except (FileNotFoundError, json.JSONDecodeError, OSError):
+            return default_state()
+    except (json.JSONDecodeError, OSError):
+        return default_state()
 
 
 def apply_patch(state: dict[str, Any], patch: Any) -> dict[str, Any]:
@@ -683,16 +692,42 @@ def parse_plugins(data: bytes) -> list[dict[str, Any]]:
     return plugins
 
 
+def receive_effects_plugins(connection: socket.socket) -> list[dict[str, Any]]:
+    connection.sendall(HEADER.pack(b"ORGB", 0, PLUGIN_LIST_PACKET, 0))
+    magic, _device, packet, size = HEADER.unpack(receive_exact(connection, HEADER.size))
+    if magic != b"ORGB" or packet != PLUGIN_LIST_PACKET:
+        raise ValueError("unexpected OpenRGB plugin list response")
+    if size > 1024 * 1024:
+        raise ValueError("OpenRGB plugin list is unreasonably large")
+    return parse_plugins(receive_exact(connection, size))
+
+
+def server_controller_count(timeout: float = 0.5) -> int:
+    with socket.create_connection(("127.0.0.1", 6742), timeout=timeout) as connection:
+        connection.settimeout(timeout)
+        connection.sendall(HEADER.pack(b"ORGB", 0, 0, 0))
+        magic, _device, packet, size = HEADER.unpack(receive_exact(connection, HEADER.size))
+        if magic != b"ORGB" or packet != 0 or size != 4:
+            raise ValueError("invalid OpenRGB controller count response")
+        return struct.unpack("<I", receive_exact(connection, size))[0]
+
+
+def wait_for_server(timeout: float = 45) -> None:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        try:
+            if server_controller_count() > 0:
+                return
+        except (OSError, ValueError, struct.error):
+            pass
+        time.sleep(0.25)
+    raise RuntimeError("OpenRGB SDK did not detect any RGB controllers")
+
+
 def load_effects_profile(host: str = "127.0.0.1", port: int = 6743, timeout: float = 1.5) -> None:
     with socket.create_connection((host, port), timeout=timeout) as connection:
         connection.settimeout(timeout)
-        connection.sendall(HEADER.pack(b"ORGB", 0, PLUGIN_LIST_PACKET, 0))
-        magic, _device, packet, size = HEADER.unpack(receive_exact(connection, HEADER.size))
-        if magic != b"ORGB" or packet != PLUGIN_LIST_PACKET:
-            raise ValueError("unexpected OpenRGB plugin list response")
-        if size > 1024 * 1024:
-            raise ValueError("OpenRGB plugin list is unreasonably large")
-        plugins = parse_plugins(receive_exact(connection, size))
+        plugins = receive_effects_plugins(connection)
         plugin = next((item for item in plugins if item["name"] == EFFECTS_PLUGIN_NAME), None)
         if plugin is None:
             raise RuntimeError("OpenRGB Effects Plugin is not registered")
@@ -703,10 +738,22 @@ def load_effects_profile(host: str = "127.0.0.1", port: int = 6743, timeout: flo
         connection.sendall(HEADER.pack(b"ORGB", plugin["index"], PLUGIN_SPECIFIC_PACKET, len(data)) + data)
 
 
-def port_available(port: int) -> bool:
+def systemd_unit_active(unit: str, *, user: bool = False) -> bool:
+    systemctl = os.environ.get("OPENRGB_CONTROL_SYSTEMCTL", "systemctl")
+    command = [systemctl]
+    if user:
+        command.append("--user")
+    command.extend(["is-active", "--quiet", unit])
     try:
-        with socket.create_connection(("127.0.0.1", port), timeout=0.12):
-            return True
+        return (
+            subprocess.run(
+                command,
+                check=False,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            ).returncode
+            == 0
+        )
     except OSError:
         return False
 
@@ -807,8 +854,8 @@ def wait_for_runtime(timeout: float = 10) -> None:
 
 def public_state(state: dict[str, Any]) -> dict[str, Any]:
     current = state["scene"]
-    openrgb_available = port_available(6742)
-    effects_available = port_available(6743)
+    openrgb_is_available = systemd_unit_active("openrgb.service")
+    effects_is_available = systemd_unit_active("openrgb-effects.service", user=True)
     catalog = []
     for scene_id, scene in SCENES.items():
         catalog.append(
@@ -830,9 +877,9 @@ def public_state(state: dict[str, Any]) -> dict[str, Any]:
         "brightness": state["brightness"],
         "settings": state["scenes"][current],
         "scenes": state["scenes"],
-        "available": openrgb_available and effects_available,
-        "openrgbAvailable": openrgb_available,
-        "effectsAvailable": effects_available,
+        "available": openrgb_is_available and effects_is_available,
+        "openrgbAvailable": openrgb_is_available,
+        "effectsAvailable": effects_is_available,
         "catalog": catalog,
     }
 
@@ -873,7 +920,7 @@ def command_apply(args: argparse.Namespace) -> None:
 
 def command_reset(_args: argparse.Namespace) -> None:
     with StateLock():
-        state = default_state(config_version())
+        state = default_state()
         write_runtime_files(state)
         atomic_json(state_path(), state)
         apply_runtime(state, fallback=True)
@@ -898,6 +945,10 @@ def command_restore(_args: argparse.Namespace) -> None:
             apply_topology_overrides(state)
 
 
+def command_wait_server(_args: argparse.Namespace) -> None:
+    wait_for_server()
+
+
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(description=__doc__)
     subparsers = result.add_subparsers(dest="command", required=True)
@@ -913,6 +964,8 @@ def parser() -> argparse.ArgumentParser:
     prepare.set_defaults(handler=command_prepare)
     restore = subparsers.add_parser("restore", help="restore static state after the service starts")
     restore.set_defaults(handler=command_restore)
+    wait_server = subparsers.add_parser("wait-server", help="wait for the OpenRGB SDK and detected controllers")
+    wait_server.set_defaults(handler=command_wait_server)
     return result
 
 

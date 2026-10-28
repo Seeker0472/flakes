@@ -13,6 +13,7 @@
         "/var/lib/libvirt"
         "/var/lib/OpenRGB"
       ];
+      extraUserDirectories = [ ".local/state/openrgb-control" ];
     })
   ];
 
