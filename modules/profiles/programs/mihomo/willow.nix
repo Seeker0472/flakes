@@ -1,19 +1,45 @@
 # Shared Willow relay data. Both the NixOS mihomo module and the Clash Verge
-# package render from this file, so the server, port, cipher, UDP setting and
-# OpenAI/Codex rules have a single source.
+# package render from this file, so the endpoints, smux settings, certificate
+# fingerprint and OpenAI/Codex rules have a single source.
 let
+  # Fallback-group name; openaiRules targets this group, not a single proxy.
   name = "Willow";
 in
 {
   inherit name;
 
   server = "8.229.8.238";
-  port = 28443;
-  cipher = "2022-blake3-aes-256-gcm";
-  udp = true;
 
-  # The proxy name is the only variable: the NixOS config uses "Willow" as the
-  # proxy, and the Clash Verge profiles use the same name.
+  # Primary transport: Hysteria2 over UDP. QUIC multiplexes every browser
+  # connection over one session, so a page load no longer pays a fresh
+  # airport-to-Willow handshake per request.
+  hy2Name = "WillowHY2";
+  hy2Port = 28444;
+  hy2Sni = "willow";
+  # Hysteria2 Brutal bandwidth hints. Both peers need them: with the listener
+  # ignoring client bandwidth (or the client omitting up/down) the handshake
+  # fails, as tested against mihomo 1.19.x.
+  hy2Up = "1000 Mbps";
+  hy2Down = "1000 Mbps";
+  # SHA256 of hosts/Willow/hysteria2.crt. Pinning avoids skip-cert-verify;
+  # rotate the certificate and this value together.
+  hy2Fingerprint = "8A:D8:AC:44:13:5A:74:26:FF:19:9B:F6:B3:BE:87:37:01:B1:D7:89:8D:FE:83:13:DB:77:C5:76:BF:1C:B5:3A";
+
+  # Fallback transport: Shadowsocks 2022 over TCP. sing-mux collapses many
+  # short browser connections into a few outer connections; UDP stays
+  # unmuxed so QUIC keeps using the native SS UDP relay.
+  ssName = "WillowSS";
+  ssPort = 28443;
+  ssCipher = "2022-blake3-aes-256-gcm";
+  ssUdp = true;
+  ssSmux = {
+    enabled = true;
+    protocol = "h2mux";
+    maxConnections = 4;
+    padding = true;
+    onlyTcp = true;
+  };
+
   openaiRules = proxyName: [
     "DOMAIN,dns.google,${proxyName}"
     "DOMAIN-SUFFIX,openai.com,${proxyName}"

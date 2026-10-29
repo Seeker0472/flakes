@@ -100,8 +100,8 @@ in
 
     willow = mkNode "x86_64-linux" {
       hostName = "Willow";
-      # GCP ephemeral external address; replace with a static IP or DNS name
-      # if the VM is recreated or the lease changes.
+      # Reserved regional static address `my-new-static-ip` (us-west1), so the
+      # client configuration survives VM stop/start or recreation.
       hostname = "8.229.8.238";
       sshUser = "root";
       sshOpts = [

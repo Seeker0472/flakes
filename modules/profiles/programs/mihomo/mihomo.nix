@@ -173,14 +173,33 @@ let
 
   providersAndRules = ''
     proxies:
-      - name: ${willow.name}
+      - name: ${willow.hy2Name}
+        type: hysteria2
+        server: ${willow.server}
+        port: ${toString willow.hy2Port}
+        password: "${config.sops.placeholder.willow_hy2_password}"
+        sni: ${willow.hy2Sni}
+        fingerprint: "${willow.hy2Fingerprint}"
+        alpn:
+          - h3
+        up: ${willow.hy2Up}
+        down: ${willow.hy2Down}
+        dialer-proxy: Chain-Entry
+
+      - name: ${willow.ssName}
         type: ss
         server: ${willow.server}
-        port: ${toString willow.port}
-        cipher: ${willow.cipher}
+        port: ${toString willow.ssPort}
+        cipher: ${willow.ssCipher}
         password: "${config.sops.placeholder.willow_ss_password}"
-        udp: ${lib.boolToString willow.udp}
+        udp: ${lib.boolToString willow.ssUdp}
         dialer-proxy: Chain-Entry
+        smux:
+          enabled: ${lib.boolToString willow.ssSmux.enabled}
+          protocol: ${willow.ssSmux.protocol}
+          max-connections: ${toString willow.ssSmux.maxConnections}
+          padding: ${lib.boolToString willow.ssSmux.padding}
+          only-tcp: ${lib.boolToString willow.ssSmux.onlyTcp}
 
     proxy-providers:
       airport_mojie:
@@ -198,6 +217,23 @@ let
         health-check: { enable: true, interval: 600, url: http://www.gstatic.com/generate_204 }
 
     proxy-groups:
+      # `Willow` is the manual transport selector; `Willow-Auto` is the
+      # automatic HY2 -> SS fallback. Rules keep targeting `Willow`.
+      - name: ${willow.name}
+        type: select
+        proxies:
+          - ${willow.name}-Auto
+          - ${willow.hy2Name}
+          - ${willow.ssName}
+
+      - name: ${willow.name}-Auto
+        type: fallback
+        url: 'https://www.gstatic.com/generate_204'
+        interval: 300
+        proxies:
+          - ${willow.hy2Name}
+          - ${willow.ssName}
+
       - name: "Chain-Entry"
         type: select
         use: [airport_ikuuu]
@@ -304,6 +340,7 @@ in
         airport_ikuuu_url.sopsFile = ./mihomo.secrets.yaml;
         mihomo_secret.sopsFile = ./mihomo.secrets.yaml;
         willow_ss_password.sopsFile = ./mihomo.secrets.yaml;
+        willow_hy2_password.sopsFile = ./mihomo.secrets.yaml;
       };
 
       sops.templates."mihomo-config.yaml" = {
