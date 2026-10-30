@@ -70,3 +70,48 @@ nix run nixpkgs#nixos-rebuild -- switch \
 - If the provider keeps a security group or firewall in front of the VPS, open
   the same ports there too; the NixOS firewall only filters packets that reach
   the host.
+
+## UniVPN route through NetBird
+
+`hosts/KingsCross/uni-next.nix` runs `uni-next` with a dedicated TUN and a
+separate `netbird-uni-next` routing peer. The NetBird client listens on UDP
+28479, inside the reserved provider firewall band. The UniVPN password and
+logout user ID are encrypted in `uni-next.secrets.yaml`; the VPN account name,
+gateway, verified SPKI pin, reconnect policy, and exported address are Nix
+settings. The `uni-next` client has already reached `10.19.20.1` through the
+VPN with ICMP and TCP/22 in a temporary KingsCross test.
+
+The desired NetBird API state lives in `uni-next.nix`: a named Network, one
+`10.19.20.1/32` Resource, a single KingsCross routing peer with masquerade, and
+a one-way policy from the existing `All` group to that resource. Every enrolled
+NetBird peer can reach this one VPN host. Change `source_groups` if access
+should be narrower. NetBird distributes the `/32` route to those peers, so no
+second overlay address or address remapping is required.
+The account's current address range is `100.4.0.0/16`; the sync task checks
+that it still matches the Nix source CIDR before writing API state.
+
+`netbird-uni-next-sync.service` reconciles those objects by name at boot and
+hourly. It creates a one-off setup key with the routing peer group, enrolls the
+local NetBird client, then verifies that the group has exactly one peer. It
+updates managed objects that drift and does not delete unrelated objects.
+The service reads its management PAT from the mode `0400` sops-nix runtime
+secret `/run/secrets/netbird-uni-next-api-token`. Its encrypted source is
+`uni-next-api.secrets.yaml`; the token never enters `flake.nix` or the Nix
+store. It belongs to the dedicated `uni-next-kingscross-sync` admin service
+user and expires after one year. Rotate the PAT before expiry by updating that
+SOPS file. The new secret restarts the sync service, and subsequent client
+setup keys are generated through the API.
+
+The flake pins a published `uni-next` revision containing the KingsCross TUN
+fix and the named NetBird service option. Update that revision and its lock
+entry together when upgrading the client. The host's existing iptables
+firewall backend is retained; the module adds a
+source-, destination-, and interface-limited TCP MSS clamp for forwarded
+packets. Keep the provider console available during activation as described
+above.
+
+After activation, verify `systemctl status uni-next netbird-uni-next
+netbird-uni-next-sync`, then check `ip route get 10.19.20.1` and `ping
+10.19.20.1` on KingsCross. From an enrolled client in the source group, check
+`ping 10.19.20.1` and TCP port 22. The gateway itself has already passed the
+VPN-side check; client-side NetBird routing still needs activation to verify.

@@ -30,6 +30,8 @@ The main SOPS scopes are:
 | `modules/profiles/programs/mihomo/mihomo.secrets.yaml` | DiagonAlley, burrow, Hippogriff; also admin and recovery |
 | `hosts/Willow/mihomo.secrets.yaml` | DiagonAlley, Willow's SSH host key; also admin and recovery |
 | `hosts/KingsCross/netbird.secrets.yaml` | King'sCross SSH host key; also admin and recovery |
+| `hosts/KingsCross/uni-next.secrets.yaml` | King'sCross SSH host key; also admin and recovery |
+| `hosts/KingsCross/uni-next-api.secrets.yaml` | King'sCross SSH host key; also admin and recovery |
 
 `users/seeker/ssh/github.secrets.json` is shared with all six listed machine
 identities; the Android devices `mi15` and `miPad` are included. Public keys

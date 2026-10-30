@@ -576,6 +576,7 @@
         "nixpkgs": "nixpkgs",
         "nixvim": "nixvim",
         "sops-nix": "sops-nix",
+        "uni-next": "uni-next",
         "winapps": "winapps",
         "zen-browser": "zen-browser"
       }
@@ -696,6 +697,27 @@
       "original": {
         "owner": "numtide",
         "repo": "treefmt-nix",
+        "type": "github"
+      }
+    },
+    "uni-next": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1793374914,
+        "narHash": "sha256-BFAHz5S5LOukT9fMTYd0gi9x0eSgxsLrHAcq58nx4s0=",
+        "owner": "Seeker0472",
+        "repo": "uni-next",
+        "rev": "1520ed0bfa8388766f4af1a143c46e48c21bdeff",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Seeker0472",
+        "repo": "uni-next",
+        "rev": "1520ed0bfa8388766f4af1a143c46e48c21bdeff",
         "type": "github"
       }
     },
