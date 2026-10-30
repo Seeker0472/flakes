@@ -107,7 +107,6 @@ in
 
   systemd.services.netbird-uni-next-sync = {
     description = "Reconcile KingsCross UniVPN resource with NetBird API";
-    wantedBy = [ "multi-user.target" ];
     requires = [ "netbird-uni-next.service" ];
     after = [
       "netbird-uni-next.service"
@@ -141,9 +140,8 @@ in
     description = "Periodically reconcile the KingsCross UniVPN NetBird resource";
     wantedBy = [ "timers.target" ];
     timerConfig = {
-      OnBootSec = "2min";
+      OnActiveSec = "5min";
       OnUnitActiveSec = "1h";
-      Persistent = true;
     };
   };
 }

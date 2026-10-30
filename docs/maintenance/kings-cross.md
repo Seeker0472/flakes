@@ -90,8 +90,9 @@ second overlay address or address remapping is required.
 The account's current address range is `100.4.0.0/16`; the sync task checks
 that it still matches the Nix source CIDR before writing API state.
 
-`netbird-uni-next-sync.service` reconciles those objects by name at boot and
-hourly. It creates a one-off setup key with the routing peer group, enrolls the
+`netbird-uni-next-sync.service` reconciles those objects by name five minutes
+after the timer starts and hourly thereafter. It can also be started manually
+after activation. It creates a one-off setup key with the routing peer group, enrolls the
 local NetBird client, then verifies that the group has exactly one peer. It
 updates managed objects that drift and does not delete unrelated objects.
 The service reads its management PAT from the mode `0400` sops-nix runtime
