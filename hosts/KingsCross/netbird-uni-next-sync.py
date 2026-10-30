@@ -70,8 +70,18 @@ def named(items, name, kind):
     return matches[0] if matches else None
 
 
+def collection(api, path):
+    # NetBird 0.81 returns JSON null for an empty Network Resources list.
+    items = api.request("GET", path)
+    if items is None:
+        return []
+    if not isinstance(items, list):
+        raise SyncError(f"NetBird API GET {path}: expected a list")
+    return items
+
+
 def upsert_named(api, path, name, desired, kind):
-    current = named(api.request("GET", path), name, kind)
+    current = named(collection(api, path), name, kind)
     if current is None:
         print(f"creating {kind} {name}")
         return api.request("POST", path, desired)
@@ -115,7 +125,7 @@ def upsert_named(api, path, name, desired, kind):
 
 def ensure_router(api, network_id, group_id):
     path = f"/networks/{network_id}/routers"
-    routers = api.request("GET", path)
+    routers = collection(api, path)
     matches = [r for r in routers if r.get("peer_groups") == [group_id] and not r.get("peer")]
     if len(matches) > 1:
         raise SyncError("multiple UniVPN routing peers found")
@@ -184,12 +194,12 @@ def wait_for_router_group(api, group_id):
 
 
 def reconcile(api, cfg, binary, runtime_dir):
-    accounts = api.request("GET", "/accounts")
+    accounts = collection(api, "/accounts")
     if len(accounts) != 1 or accounts[0].get("settings", {}).get("network_range") != cfg["source_cidr"]:
         raise SyncError("NetBird account address range differs from the Nix source CIDR")
     router_group = upsert_named(api, "/groups", cfg["router_group"], {"name": cfg["router_group"]}, "group")
     resource_group = upsert_named(api, "/groups", cfg["resource_group"], {"name": cfg["resource_group"]}, "group")
-    groups = api.request("GET", "/groups")
+    groups = collection(api, "/groups")
     source_ids = []
     for name in cfg["source_groups"]:
         group = named(groups, name, "source group")

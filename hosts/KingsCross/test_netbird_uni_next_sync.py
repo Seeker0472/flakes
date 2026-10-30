@@ -28,7 +28,10 @@ class FakeAPI:
         if method == "GET" and path.startswith("/groups/"):
             return {"id": path.rsplit("/", 1)[1], "peers_count": 1}
         if method == "GET":
-            return copy.deepcopy(self.objects.setdefault(path, []))
+            values = self.objects.setdefault(path, [])
+            if path.endswith("/resources") and not values:
+                return None
+            return copy.deepcopy(values)
         self.writes.append((method, path))
         if method == "POST":
             obj = copy.deepcopy(payload)
