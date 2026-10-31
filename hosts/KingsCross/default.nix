@@ -4,6 +4,7 @@ import ../lib/mk-host-module.nix {
     ./netbird.nix
     ./secrets.nix
     ./taskchampion.nix
+    ./personal-storage.nix
     ./uni-next.nix
     ../lib/vps-base.nix
     (

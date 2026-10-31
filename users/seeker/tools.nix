@@ -3,6 +3,7 @@
   home.packages =
     (import ./packages/base.nix { inherit pkgs; })
     ++ (import ./packages/dev.nix { inherit pkgs; })
+    ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux [ pkgs.sshfs ]
     ++ [ (pkgs.java-wayland or pkgs.zulu17) ];
 
   home.sessionVariables = lib.optionalAttrs (pkgs ? java-wayland) {

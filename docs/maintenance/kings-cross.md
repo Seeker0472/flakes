@@ -19,6 +19,9 @@ provider console/VNC available for networking, SSH, kernel, or bootloader
 changes: rollback does not cover every failure mode. `switch` normally does
 not require a reboot.
 
+LiveSync, file transfer, credentials and shared quotas are documented in
+[personal-storage.md](personal-storage.md).
+
 Useful switches:
 
 ```bash

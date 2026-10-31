@@ -15,6 +15,7 @@ in
       # qmllint/qmltestrunner only run on x86_64-linux, matching devContainerImage.
       checks = lib.optionalAttrs (system == "x86_64-linux") {
         quickshell = import ../checks/quickshell.nix { inherit pkgs; };
+        personal-storage = import ../checks/personal-storage.nix { inherit pkgs; };
       };
       formatter = pkgs.nixfmt-tree;
       devShells.default = pkgs.mkShell {

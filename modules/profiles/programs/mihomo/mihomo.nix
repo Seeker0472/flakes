@@ -104,6 +104,7 @@ let
         - https://dns.alidns.com/dns-query
 
       fake-ip-filter:
+    ${lib.optionalString config.machine.programs.netbird.enable "    - files-internal.vps.seekerer.com\n"}
         - '*.lan'
         - '*.local'
         - localhost
@@ -261,6 +262,7 @@ let
     ${lib.concatMapStringsSep "\n" (rule: "  - ${rule}") (willow.openaiRules willow.name)}
       - GEOSITE,category-ads-all,REJECT
       - DOMAIN,${netbirdHost},DIRECT
+    ${lib.optionalString config.machine.programs.netbird.enable "  - DOMAIN,files-internal.vps.seekerer.com,DIRECT\n"}
       - DOMAIN-SUFFIX,lan,DIRECT
       - DOMAIN-SUFFIX,local,DIRECT
     ${directRules}

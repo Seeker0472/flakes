@@ -12,6 +12,16 @@ keys:
   - &hippogriff_age age1f6zu5ekw30k4h32du2qdsguxxqt2rdjf3pgq6d5cjwxethfjddhsh74uqk
 
 creation_rules:
+  - path_regex: hosts/KingsCross/personal-storage\.secrets\.yaml$
+    unencrypted_suffix: _unencrypted
+    key_groups:
+      - age:
+          - *admin_seeker_age
+          - *recovery_age
+          - *kings_cross_age
+          - *diagonal_alley_age
+          - *hippogriff_age
+
   - path_regex: hosts/KingsCross/.*secrets\.yaml$
     unencrypted_suffix: _unencrypted
     key_groups:

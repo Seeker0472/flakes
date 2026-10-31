@@ -24,6 +24,10 @@ in
     devVM = meshHost "seeker";
     nixos-wsl = meshHost "seeker";
     ecos = meshHost "seeker4721";
+    transfer = (meshHost "copyparty") // {
+      HostName = "files-internal.vps.seekerer.com";
+      Port = 2222;
+    };
     "vps.seekerer.com" = {
       IdentityFile = [ config.sops.secrets."ssh-admin-private".path ];
       IdentitiesOnly = true;

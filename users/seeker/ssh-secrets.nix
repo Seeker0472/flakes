@@ -45,6 +45,10 @@ in
       nixos-wsl = meshHost "seeker";
       Hippogriff = meshHost "seeker";
       ecos = meshHost "seeker4721";
+      transfer = (meshHost "copyparty") // {
+        HostName = "files-internal.vps.seekerer.com";
+        Port = 2222;
+      };
     }
     // lib.optionalAttrs isAdminHost {
       "vps.seekerer.com" = {
