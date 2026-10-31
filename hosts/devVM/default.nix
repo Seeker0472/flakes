@@ -1,6 +1,5 @@
-import ../lib/mk-host-module.nix {
-  metaFile = ./meta.nix;
-  extraModules = [
+{
+  imports = [
     {
       boot.kernelParams = [ "console=ttyS0,115200n8" ];
 

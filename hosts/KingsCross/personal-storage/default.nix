@@ -1,8 +1,8 @@
 { config, lib, ... }:
 let
   cfg = config.services.personalStorage;
-  shared = import ../lib/hardened-service.nix;
-  sshKeys = import ../../users/seeker/ssh-public-keys.nix;
+  shared = import ../service-helpers.nix;
+  sshKeys = import ../../../users/seeker/ssh-public-keys.nix;
   credentialKeys = [
     "transfer_password"
     "manager_password"
@@ -11,7 +11,7 @@ let
   ];
 in
 {
-  imports = [ ../lib/personal-storage.nix ];
+  imports = [ ./service.nix ];
 
   services.personalStorage = {
     enable = true;
@@ -26,7 +26,7 @@ in
 
   sops = {
     secrets = lib.genAttrs credentialKeys (_: {
-      sopsFile = ./personal-storage.secrets.yaml;
+      sopsFile = ../personal-storage.secrets.yaml;
       mode = "0400";
     });
     templates = {

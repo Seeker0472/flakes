@@ -1,4 +1,4 @@
-# Shared hardening and TLS helpers for KingsCross (VPS) services.
+# Shared hardening and TLS helpers for King'sCross services.
 # These only shape module options; per-service values are supplied by callers.
 {
   # Baseline systemd sandbox shared by the public-facing services on the VPS.

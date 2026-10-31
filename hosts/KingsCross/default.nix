@@ -1,12 +1,11 @@
-import ../lib/mk-host-module.nix {
-  metaFile = ./meta.nix;
-  extraModules = [
+{
+  imports = [
     ./netbird.nix
     ./secrets.nix
     ./taskchampion.nix
-    ./personal-storage.nix
+    ./personal-storage
     ./uni-next.nix
-    ../lib/vps-base.nix
+    ../../modules/profiles/system/core/vps.nix
     (
       { inputs, ... }:
       {

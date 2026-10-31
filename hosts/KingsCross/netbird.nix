@@ -5,7 +5,7 @@
   ...
 }:
 let
-  shared = import ../lib/hardened-service.nix;
+  shared = import ./service-helpers.nix;
   domain = "netbird.vps.seekerer.com";
   publicPort = 28443;
   relayPort = 28444;

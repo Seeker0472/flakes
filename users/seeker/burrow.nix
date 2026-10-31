@@ -17,7 +17,7 @@ in
   home-manager.users.seeker =
     { config, lib, ... }:
     let
-      helpers = import ./ssh-key-pair.nix { inherit config lib; };
+      helpers = import ./ssh-helpers.nix { inherit config lib; };
     in
     {
       imports = [

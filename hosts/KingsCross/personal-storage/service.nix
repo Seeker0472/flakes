@@ -6,7 +6,7 @@
 }:
 let
   cfg = config.services.personalStorage;
-  shared = import ./hardened-service.nix;
+  shared = import ../service-helpers.nix;
   base = "/srv/personal-services";
   projectID = 3500;
   inodeLimit = 250000;

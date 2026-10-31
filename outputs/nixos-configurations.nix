@@ -2,18 +2,6 @@
 let
   lib = inputs.nixpkgs.lib;
 
-  mkNixos =
-    {
-      system,
-      modules,
-      baseModules,
-    }:
-    lib.nixosSystem {
-      inherit system;
-      specialArgs = { inherit inputs; };
-      modules = baseModules ++ modules;
-    };
-
   hosts = {
     miLaptop = {
       bundle = ../modules/bundles/desktop.nix;
@@ -28,6 +16,7 @@ let
       userModule = ../users/seeker/headless.nix;
     };
     nixos-wsl = {
+      meta = null;
       system = "x86_64-linux";
       bundle = ../modules/bundles/wsl.nix;
       extraModules = [ inputs.nixos-wsl.nixosModules.default ];
@@ -51,19 +40,33 @@ let
     name:
     {
       hostDir ? ../hosts/${name},
-      system ? (import (hostDir + "/meta.nix")).system,
+      meta ? import (hostDir + "/meta.nix"),
+      system ? meta.system,
       bundle,
       extraModules ? [ ],
       userModule ? null,
     }:
-    mkNixos {
+    lib.nixosSystem {
       inherit system;
-      baseModules = [
+      specialArgs = { inherit inputs; };
+      modules = [
         ./common/nixpkgs-settings.nix
         bundle
       ]
-      ++ extraModules;
-      modules = [ hostDir ] ++ lib.optional (userModule != null) userModule;
+      ++ extraModules
+      ++ [ hostDir ]
+      ++ lib.optional (userModule != null) userModule
+      ++ lib.optional (meta != null) {
+        networking.hostName = meta.hostName;
+        system.stateVersion = meta.stateVersion;
+        machine =
+          meta.machine
+          // lib.optionalAttrs (meta ? disk) {
+            disko = meta.disk // {
+              enable = true;
+            };
+          };
+      };
     };
 
   devVMConfiguration = mkHost "devVM" hosts.devVM;
@@ -90,20 +93,16 @@ let
         pkgsArm = liuqin.lib.pkgsArm;
       };
     in
-    lib.nixosSystem {
-      system = "aarch64-linux";
-      specialArgs = { inherit inputs; };
-      modules = [
+    mkHost "Hippogriff" {
+      bundle = ../modules/bundles/tablet.nix;
+      userModule = ../users/seeker/hippogriff.nix;
+      extraModules = [
         {
           # The port module installs its device overlay; injection must follow it.
           nixpkgs.overlays = lib.mkAfter (lib.optional fast inject);
           nixpkgs.config.allowUnfreePredicate = liuqin.lib.allowLiuqinUnfree;
         }
         liuqin.nixosModules.liuqin
-        ./common/nixpkgs-settings.nix
-        ../modules/bundles/tablet.nix
-        ../users/seeker/hippogriff.nix
-        ../hosts/Hippogriff
       ];
     };
 in

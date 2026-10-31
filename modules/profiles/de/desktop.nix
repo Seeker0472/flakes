@@ -1,5 +1,4 @@
-# Desktop-facing services and desktop software configuration for DiagonAlley.
-# Hardware descriptions stay in hardware-configuration.nix.
+# Shared PC desktop services, fonts, input method and keyboard mapping.
 { pkgs, ... }:
 {
   services.pipewire = {

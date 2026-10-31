@@ -6,7 +6,7 @@
 }:
 let
   hostName = osConfig.networking.hostName;
-  helpers = import ./ssh-key-pair.nix { inherit config lib; };
+  helpers = import ./ssh-helpers.nix { inherit config lib; };
   inherit (helpers) mkKeyPair sshKeys;
   clientSopsFile = sshKeys.files.${hostName} or null;
   deploySecrets = lib.attrByPath [ "machine" "secrets" "deploy" ] false osConfig;
@@ -17,11 +17,6 @@ let
     "nixos-wsl"
     "Hippogriff"
   ];
-  meshHost = user: {
-    User = user;
-    IdentityFile = [ config.sops.secrets."ssh-client-private".path ];
-    IdentitiesOnly = true;
-  };
 in
 {
   imports = lib.optional deploySecrets ./ssh-client-secrets.nix;
@@ -38,42 +33,22 @@ in
       }
     ];
 
-    programs.ssh.settings = {
-      DiagonAlley = meshHost "seeker";
-      miLaptop = meshHost "seeker";
-      devVM = meshHost "seeker";
-      nixos-wsl = meshHost "seeker";
-      Hippogriff = meshHost "seeker";
-      ecos = meshHost "seeker4721";
-      transfer = (meshHost "copyparty") // {
-        HostName = "files-internal.vps.seekerer.com";
-        Port = 2222;
+    programs.ssh.settings =
+      helpers.meshHosts
+      // {
+        Hippogriff = helpers.meshHost "seeker";
+      }
+      // lib.optionalAttrs isAdminHost {
+        "vps.seekerer.com" = {
+          IdentityFile = [ config.sops.secrets."ssh-admin-private".path ];
+          IdentitiesOnly = true;
+        };
       };
-    }
-    // lib.optionalAttrs isAdminHost {
-      "vps.seekerer.com" = {
-        IdentityFile = [ config.sops.secrets."ssh-admin-private".path ];
-        IdentitiesOnly = true;
-      };
-    };
 
     sops = {
       age.keyFile = ageKeyPath;
-      secrets = {
-        "ssh-client-private" = {
-          sopsFile = clientSopsFile;
-          key = "private_key";
-          path = "${config.home.homeDirectory}/.ssh/id_mesh";
-          mode = "0600";
-        };
-        "ssh-client-public" = {
-          sopsFile = clientSopsFile;
-          key = "public_key_unencrypted";
-          path = "${config.home.homeDirectory}/.ssh/id_mesh.pub";
-          mode = "0644";
-        };
-      }
-      // lib.optionalAttrs isAdminHost (mkKeyPair "ssh-admin" "admin");
+      secrets =
+        mkKeyPair "ssh-client" hostName // lib.optionalAttrs isAdminHost (mkKeyPair "ssh-admin" "admin");
     };
   };
 }

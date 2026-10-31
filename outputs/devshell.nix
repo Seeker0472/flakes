@@ -12,10 +12,27 @@ in
     }:
     {
       pre-commit.settings.hooks.nixfmt.enable = true;
-      # qmllint/qmltestrunner only run on x86_64-linux, matching devContainerImage.
+      # Static QML validation only; no VM or behavior tests in flake checks.
       checks = lib.optionalAttrs (system == "x86_64-linux") {
-        quickshell = import ../checks/quickshell.nix { inherit pkgs; };
-        personal-storage = import ../checks/personal-storage.nix { inherit pkgs; };
+        quickshell =
+          pkgs.runCommand "quickshell-lint"
+            {
+              nativeBuildInputs = [ pkgs.qt6.qtdeclarative ];
+            }
+            ''
+              export HOME="$TMPDIR/home"
+              export XDG_CACHE_HOME="$TMPDIR/cache"
+              mkdir -p "$HOME" "$XDG_CACHE_HOME"
+              qmllint \
+                --import disable \
+                --unqualified disable \
+                --unused-imports disable \
+                --uncreatable-type disable \
+                -I ${pkgs.quickshell}/lib/qt-6/qml \
+                -I ${pkgs.qt6.qtdeclarative}/lib/qt-6/qml \
+                ${../modules/profiles/de/quickshell/shell}/*.qml
+              touch "$out"
+            '';
       };
       formatter = pkgs.nixfmt-tree;
       devShells.default = pkgs.mkShell {

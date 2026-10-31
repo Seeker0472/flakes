@@ -4,7 +4,7 @@
 # for SSH administration and the reserved port band.
 { lib, pkgs, ... }:
 let
-  sshKeys = import ../../users/seeker/ssh-public-keys.nix;
+  sshKeys = import ../../../../users/seeker/ssh-public-keys.nix;
   adminSshKeys = [ sshKeys.admin ];
 in
 {

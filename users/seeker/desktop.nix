@@ -6,16 +6,7 @@
     ../../modules/home/desktop.nix
   ];
 
-  home.packages =
-    (import ./packages/media.nix { inherit pkgs; })
-    ++ (import ./packages/office.nix { inherit pkgs; })
-    ++ (with pkgs; [
-      netease-cloud-music-gtk
-      obsidian
-      qq
-      vscode
-      zotero
-    ]);
+  home.packages = import ./packages/desktop.nix { inherit pkgs; };
 
   programs = {
     kitty.enable = true;

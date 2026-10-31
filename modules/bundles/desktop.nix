@@ -2,6 +2,7 @@
 {
   imports = [
     ./development.nix
+    ../profiles/de/desktop.nix
     # The flake modules providing disko/impermanence options should move into
     # the profile directories that use them (out of this scope).
     inputs.impermanence.nixosModule

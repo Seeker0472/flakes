@@ -1,22 +1,17 @@
 {
   config,
-  lib,
-  pkgs,
   ...
 }:
 {
   imports = [
-    (import ../lib/impermanence-disk.nix {
-      inherit config lib pkgs;
-      extraDirectories = [
-        # QQ/WeChat and other Flatpak-style state lives under the persisted
-        # home; nothing host-specific here beyond the systemd coredump dir.
-        "/var/lib/systemd/coredump"
-      ];
-    })
+    ../../modules/profiles/impermanence/persistence.nix
   ];
 
   config = {
+    environment.persistence."${config.machine.btrfs.impermanence.persistdir}".directories = [
+      "/var/lib/systemd/coredump"
+    ];
+
     machine.btrfs.impermanence = {
       luksName = "crypted";
       device = "/dev/disk/by-id/nvme-SAMSUNG_MZVLB256HAHQ-000L7_S41GNA0K906073";

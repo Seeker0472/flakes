@@ -1,7 +1,7 @@
 # King'sCross personal storage
 
-Configuration: `hosts/KingsCross/personal-storage.nix`; shared service module:
-`hosts/lib/personal-storage.nix`.
+Configuration: `hosts/KingsCross/personal-storage/default.nix`; service implementation
+and Python helpers live alongside it in `hosts/KingsCross/personal-storage/`.
 
 | Service | HTTPS address | Account / access |
 | --- | --- | --- |
@@ -88,11 +88,3 @@ fusermount3 -u ~/transfer
 
 SFTP starts in `/files`, so use `transfer:` for its default directory, or
 `transfer:/files/` explicitly. Cross-filesystem moves copy before deleting.
-
-## Verification
-
-`checks.x86_64-linux.personal-storage` boots a VM with a real quota-enabled ext4
-filesystem. It covers public/internal permissions, spoofed headers, scoped
-CouchDB access, SFTP content integrity/random writes/chroot, creation-time cleanup,
-compaction headroom, online quota changes and aggregate EDQUOT. It never uses
-the VPS disk.

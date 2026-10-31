@@ -1,6 +1,5 @@
-import ../lib/mk-host-module.nix {
-  metaFile = ./meta.nix;
-  extraModules = [
+{
+  imports = [
     ./disk.nix
     ./hardware-configuration.nix
     ./networking.nix

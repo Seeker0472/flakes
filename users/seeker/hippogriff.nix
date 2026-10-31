@@ -44,19 +44,7 @@ in
         zen-browser.enable = true;
       };
 
-      # Same office/media set and editors as the desktop host. obsidian, qq
-      # and vscode all carry aarch64-linux builds in this nixpkgs revision
-      # (checked against pkgs.meta.platforms).
-      home.packages =
-        (import ./packages/office.nix { inherit pkgs; })
-        ++ (import ./packages/media.nix { inherit pkgs; })
-        ++ (with pkgs; [
-          netease-cloud-music-gtk
-          obsidian
-          qq
-          vscode
-          zotero
-        ]);
+      home.packages = import ./packages/desktop.nix { inherit pkgs; };
     };
   };
 }

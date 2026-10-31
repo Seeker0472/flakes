@@ -32,7 +32,7 @@ let
       hostName,
       hostname,
       sshUser,
-      sshOpts,
+      sshOpts ? localSshOpts,
       interactiveSudo ? false,
       remoteBuild ? false,
     }:
@@ -51,6 +51,30 @@ let
     };
 
   key = "/home/seeker/.ssh/id_admin";
+  commonSshOpts = [
+    "-i"
+    key
+    "-o"
+    "IdentitiesOnly=yes"
+  ];
+  localSshOpts = commonSshOpts ++ [
+    "-o"
+    "ConnectTimeout=10"
+  ];
+  vpsSshOpts = [
+    "-4"
+  ]
+  ++ commonSshOpts
+  ++ [
+    "-o"
+    "BatchMode=yes"
+    "-o"
+    "ConnectTimeout=30"
+    "-o"
+    "ServerAliveInterval=10"
+    "-o"
+    "ServerAliveCountMax=6"
+  ];
 in
 {
   # Addressing: King'sCross resolves by name, but miLaptop and Hippogriff are
@@ -65,14 +89,6 @@ in
       hostName = "miLaptop";
       hostname = "miLaptop"; # override with --hostname <ip>
       sshUser = "seeker";
-      sshOpts = [
-        "-i"
-        key
-        "-o"
-        "IdentitiesOnly=yes"
-        "-o"
-        "ConnectTimeout=10"
-      ];
       interactiveSudo = true;
     };
 
@@ -81,21 +97,7 @@ in
       hostname = "vps.seekerer.com";
       sshUser = "root";
       # Same options the maintenance doc's nixos-rebuild fallback exports.
-      sshOpts = [
-        "-4"
-        "-i"
-        key
-        "-o"
-        "IdentitiesOnly=yes"
-        "-o"
-        "BatchMode=yes"
-        "-o"
-        "ConnectTimeout=30"
-        "-o"
-        "ServerAliveInterval=10"
-        "-o"
-        "ServerAliveCountMax=6"
-      ];
+      sshOpts = vpsSshOpts;
     };
 
     willow = mkNode "x86_64-linux" {
@@ -104,21 +106,7 @@ in
       # client configuration survives VM stop/start or recreation.
       hostname = "8.229.8.238";
       sshUser = "root";
-      sshOpts = [
-        "-4"
-        "-i"
-        key
-        "-o"
-        "IdentitiesOnly=yes"
-        "-o"
-        "BatchMode=yes"
-        "-o"
-        "ConnectTimeout=30"
-        "-o"
-        "ServerAliveInterval=10"
-        "-o"
-        "ServerAliveCountMax=6"
-      ];
+      sshOpts = vpsSshOpts;
     };
 
     hippogriff = mkNode "aarch64-linux" {
@@ -129,14 +117,6 @@ in
       # outputs/nixos-configurations.nix), so deploys build locally and push
       # the closure by default; --remote-build makes the tablet build them
       # instead (the CLI can only turn this on, not off).
-      sshOpts = [
-        "-i"
-        key
-        "-o"
-        "IdentitiesOnly=yes"
-        "-o"
-        "ConnectTimeout=10"
-      ];
       interactiveSudo = true;
     };
 
@@ -148,14 +128,6 @@ in
       # host pre-build is fast; the remaining per-machine aarch64
       # derivations run through binfmt.  The tablet runs the resulting
       # closure but cannot rebuild those cross device packages locally.
-      sshOpts = [
-        "-i"
-        key
-        "-o"
-        "IdentitiesOnly=yes"
-        "-o"
-        "ConnectTimeout=10"
-      ];
       interactiveSudo = true;
     };
   };

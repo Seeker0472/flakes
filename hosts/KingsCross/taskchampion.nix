@@ -1,6 +1,6 @@
 { config, ... }:
 let
-  shared = import ../lib/hardened-service.nix;
+  shared = import ./service-helpers.nix;
   domain = "vps.seekerer.com";
   publicPort = 28443;
   backendPort = 10222;

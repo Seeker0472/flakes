@@ -1,7 +1,7 @@
 # Shared impermanence/Disko plumbing for hosts on the shared Btrfs
 # impermanence profile. Each host supplies its own device/LUKS data and any
-# extra persistence entries; this module provides the common persistence
-# directory/file lists and the sops/age tmpfiles repair rules.
+# extra persistence entries through normal module definitions. This module owns
+# the common persistence lists and the sops/age tmpfiles repair rules.
 #
 # The user's .config/sops/age tree is repaired by tmpfiles only (not via
 # environment.persistence mode rules): tmpfiles `z` repairs ownership and
@@ -11,8 +11,7 @@
   config,
   lib,
   pkgs,
-  extraDirectories ? [ ],
-  extraUserDirectories ? [ ],
+  ...
 }:
 let
   mainUser = config.machine.mainUser;
@@ -47,8 +46,7 @@ in
       "/etc/NetworkManager/system-connections"
       "/var/lib/docker"
       "/var/lib/private/mihomo"
-    ]
-    ++ extraDirectories;
+    ];
     files = [
       "/etc/machine-id"
       "/etc/ssh/ssh_host_ed25519_key"
@@ -66,8 +64,7 @@ in
         ".local/share/z"
         "Develop"
         ".mozilla"
-      ]
-      ++ extraUserDirectories;
+      ];
     };
   };
 

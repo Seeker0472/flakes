@@ -1,23 +1,22 @@
 {
   config,
-  lib,
-  pkgs,
   ...
 }:
 {
   imports = [
-    (import ../lib/impermanence-disk.nix {
-      inherit config lib pkgs;
-      extraDirectories = [
+    ../../modules/profiles/impermanence/persistence.nix
+  ];
+
+  config = {
+    environment.persistence."${config.machine.btrfs.impermanence.persistdir}" = {
+      directories = [
         "/var/lib/systemd"
         "/var/lib/libvirt"
         "/var/lib/OpenRGB"
       ];
-      extraUserDirectories = [ ".local/state/openrgb-control" ];
-    })
-  ];
+      users.${config.machine.mainUser}.directories = [ ".local/state/openrgb-control" ];
+    };
 
-  config = {
     machine.btrfs.impermanence = {
       device = "/dev/disk/by-id/nvme-SAMSUNG_MZVL21T0HCLR-00B00_S676NU0W123827";
       luksName = "crypted";

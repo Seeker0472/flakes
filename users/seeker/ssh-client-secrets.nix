@@ -1,6 +1,6 @@
 { config, lib, ... }:
 let
-  helpers = import ./ssh-key-pair.nix { inherit config lib; };
+  helpers = import ./ssh-helpers.nix { inherit config lib; };
   inherit (helpers) mkKeyPair;
 in
 {
