@@ -1,7 +1,7 @@
 { inputs, ... }:
 let
-  # gpu01 runs a standalone Home Manager setup; it has no meta.nix, so the
-  # architecture and the "user@host" attribute live here next to the config.
+  # gpu01 runs a standalone Home Manager setup; its build architecture and
+  # "user@host" output name belong to this Home Manager entrypoint.
   system = "x86_64-linux";
   gpuUser = "seeker4721";
   gpuHost = "gpu01";

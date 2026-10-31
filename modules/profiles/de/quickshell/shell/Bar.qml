@@ -324,6 +324,7 @@ Item {
 
         StatusPill {
             icon: "󰄬"
+            visible: Commands.taskEnabled
             value: TaskState.ready ? String(TaskState.totalCount) : "..."
             tooltip: TaskState.errorMessage.length > 0
                 ? TaskState.errorMessage
@@ -331,7 +332,7 @@ Item {
             accent: TaskState.overdueCount > 0 ? Theme.danger : Theme.muted
             highlighted: TaskState.overdueCount > 0
             onClicked: ShellState.togglePopup("tasks", root.screen)
-            onRightClicked: ShellState.run([Commands.taskTerminal])
+            onRightClicked: if (Commands.taskEnabled) ShellState.run([Commands.taskTerminal])
         }
 
         StatusPill {
@@ -340,7 +341,7 @@ Item {
             tooltip: Qt.formatDate(ShellState.now, "dddd, MMMM d, yyyy")
             accent: Theme.muted
             onClicked: ShellState.togglePopup("calendar", root.screen)
-            onRightClicked: ShellState.run([Commands.taskTerminal])
+            onRightClicked: if (Commands.taskEnabled) ShellState.run([Commands.taskTerminal])
             onMiddleClicked: ShellState.toggleClockFormat()
         }
 

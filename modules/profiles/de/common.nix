@@ -1,5 +1,5 @@
 # Settings shared by all Wayland compositors (Hyprland / niri). NixOS-only.
-# Imported by the compositor modules (hyprland/default.nix, niri/default.nix).
+# Shared integration for the compositor profiles in the desktop bundle.
 {
   config,
   lib,

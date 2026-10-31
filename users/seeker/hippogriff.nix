@@ -1,10 +1,12 @@
-{ inputs, pkgs, ... }:
-let
-  sshKeys = import ./ssh-public-keys.nix;
-in
+{
+  inputs,
+  lib,
+  pkgs,
+  ...
+}:
 {
   imports = [
-    ../home-manager.nix
+    ./account.nix
   ];
 
   environment.pathsToLink = [
@@ -13,7 +15,7 @@ in
   ];
   programs.dconf.enable = true;
 
-  machine.users.seeker.authorizedKeys = sshKeys.authorizedKeys ++ [
+  users.users.seeker.openssh.authorizedKeys.keys = lib.mkAfter [
     # Deployment key in day-to-day use on the tablet since the port demo
     # (/home/seeker/.ssh/id_liuqin.pub). Keep it while the sops-managed keys
     # settle in; drop it once the admin/client keys are in use everywhere.
@@ -33,13 +35,12 @@ in
         ./ssh-secrets.nix
         ./taskwarrior-sync.nix
         ../../modules/profiles/programs/home/kitty.nix
-        ../../modules/profiles/programs/home/zed.nix
         ../../modules/home/kde-connect.nix
         ../../modules/profiles/input/fcitx5.nix
       ];
 
       programs = {
-        taskwarrior.enable = true;
+        taskwarrior.enable = lib.mkDefault true;
         kitty.enable = true;
         zen-browser.enable = true;
       };

@@ -25,9 +25,6 @@ let
 in
 {
   imports = [
-    # Declares machine.de options on the Home Manager side so osConfig reads
-    # type-check instead of relying on attribute fallbacks.
-    ../profiles/de/options.nix
     ../profiles/de/config-files.nix
     ../profiles/de/quickshell/default.nix
     ../profiles/de/waybar/default.nix
@@ -41,7 +38,6 @@ in
     ../profiles/de/hyprland/conf/autostart.nix
     ../profiles/input/fcitx5.nix
     ../profiles/programs/home/kitty.nix
-    ../profiles/programs/home/zed.nix
     ./kde-connect.nix
     ./thunar.nix
   ];

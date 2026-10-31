@@ -1,118 +1,30 @@
-{ inputs, ... }:
+{ inputs, self, ... }:
 let
   lib = inputs.nixpkgs.lib;
 
-  hosts = {
-    miLaptop = {
-      bundle = ../modules/bundles/desktop.nix;
-      userModule = ../users/seeker;
-    };
-    DiagonAlley = {
-      bundle = ../modules/bundles/desktop.nix;
-      userModule = ../users/seeker;
-    };
-    devVM = {
-      bundle = ../modules/bundles/development.nix;
-      userModule = ../users/seeker/headless.nix;
-    };
-    nixos-wsl = {
-      meta = null;
-      system = "x86_64-linux";
-      bundle = ../modules/bundles/wsl.nix;
-      extraModules = [ inputs.nixos-wsl.nixosModules.default ];
-      userModule = ../users/seeker/wsl.nix;
-    };
-    "King'sCross" = {
-      hostDir = ../hosts/KingsCross;
-      bundle = ../modules/bundles/server.nix;
-    };
-    Willow = {
-      hostDir = ../hosts/Willow;
-      bundle = ../modules/bundles/server.nix;
-    };
-    burrow = {
-      bundle = ../modules/bundles/gateway.nix;
-      userModule = ../users/seeker/burrow.nix;
-    };
-  };
-
   mkHost =
-    name:
-    {
-      hostDir ? ../hosts/${name},
-      meta ? import (hostDir + "/meta.nix"),
-      system ? meta.system,
-      bundle,
-      extraModules ? [ ],
-      userModule ? null,
-    }:
+    module:
     lib.nixosSystem {
-      inherit system;
       specialArgs = { inherit inputs; };
       modules = [
         ./common/nixpkgs-settings.nix
-        bundle
-      ]
-      ++ extraModules
-      ++ [ hostDir ]
-      ++ lib.optional (userModule != null) userModule
-      ++ lib.optional (meta != null) {
-        networking.hostName = meta.hostName;
-        system.stateVersion = meta.stateVersion;
-        machine =
-          meta.machine
-          // lib.optionalAttrs (meta ? disk) {
-            disko = meta.disk // {
-              enable = true;
-            };
-          };
-      };
-    };
-
-  devVMConfiguration = mkHost "devVM" hosts.devVM;
-  devVMQemu = devVMConfiguration.config.system.build.vmWithBootLoader;
-  devVMMeta = import ../hosts/devVM/meta.nix;
-
-  # Two Xiaomi Pad 6 Pro variants, because the device packages decide both
-  # the build cost and whether the tablet can rebuild its own boot chain.
-  #
-  # HippogriffFast injects the port's x86_64->aarch64 cross device packages
-  # (kernel, U-Boot, firmware, sensors) and keeps the rest of the closure
-  # native aarch64 from cache.nixos.org.  Only the per-machine derivations
-  # (/etc, units, initrd) run through binfmt on the host.  Daily/test build.
-  #
-  # Hippogriff leaves every device package native aarch64.  The whole
-  # closure builds on the tablet itself, or on the host through
-  # binfmt/qemu-user; that is the release build when the tablet must be
-  # able to rebuild or replace its boot chain locally.
-  mkHippogriff =
-    { fast }:
-    let
-      liuqin = inputs.liuqin;
-      inject = import (liuqin.outPath + "/overlay-inject.nix") {
-        pkgsArm = liuqin.lib.pkgsArm;
-      };
-    in
-    mkHost "Hippogriff" {
-      bundle = ../modules/bundles/tablet.nix;
-      userModule = ../users/seeker/hippogriff.nix;
-      extraModules = [
-        {
-          # The port module installs its device overlay; injection must follow it.
-          nixpkgs.overlays = lib.mkAfter (lib.optional fast inject);
-          nixpkgs.config.allowUnfreePredicate = liuqin.lib.allowLiuqinUnfree;
-        }
-        liuqin.nixosModules.liuqin
+        module
       ];
     };
+  devVM = self.nixosConfigurations.devVM.config;
+  devVMQemu = devVM.system.build.vmWithBootLoader;
 in
 {
-  flake.nixosConfigurations = lib.mapAttrs mkHost hosts // {
-    # The port's own mkLiuqinSystem builder cannot take specialArgs, and
-    # this repository's modules expect the flake inputs as a module
-    # argument, so the wiring above replicates it over lib.nixosSystem.
-    Hippogriff = mkHippogriff { fast = false; };
-    HippogriffFast = mkHippogriff { fast = true; };
+  flake.nixosConfigurations = {
+    miLaptop = mkHost ../hosts/miLaptop;
+    DiagonAlley = mkHost ../hosts/DiagonAlley;
+    devVM = mkHost ../hosts/devVM;
+    nixos-wsl = mkHost ../hosts/nixos-wsl;
+    "King'sCross" = mkHost ../hosts/KingsCross;
+    Willow = mkHost ../hosts/Willow;
+    burrow = mkHost ../hosts/burrow;
+    Hippogriff = mkHost ../hosts/Hippogriff;
+    HippogriffFast = mkHost ../hosts/Hippogriff/fast.nix;
   };
 
   perSystem =
@@ -131,14 +43,14 @@ in
         fi
         ${pkgs.coreutils}/bin/mkdir -p "$state_dir"
         export NIX_DISK_IMAGE="''${NIX_DISK_IMAGE:-$state_dir/devVM.qcow2}"
-        exec ${devVMQemu}/bin/run-${devVMMeta.hostName}-vm "$@"
+        exec ${devVMQemu}/bin/run-${devVM.networking.hostName}-vm "$@"
       '';
     in
     {
-      packages = lib.optionalAttrs (system == devVMMeta.system) {
+      packages = lib.optionalAttrs (system == devVM.nixpkgs.hostPlatform.system) {
         inherit devVMQemu;
       };
-      apps = lib.optionalAttrs (system == devVMMeta.system) {
+      apps = lib.optionalAttrs (system == devVM.nixpkgs.hostPlatform.system) {
         devVMQemu = {
           type = "app";
           program = "${runDevVmQemu}";

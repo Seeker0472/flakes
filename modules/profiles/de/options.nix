@@ -1,5 +1,5 @@
-# Declares the machine.de option tree (shared by the NixOS and Home Manager
-# module systems). NixOS-only activation lives in ./common.nix.
+# NixOS is the source of desktop policy. Home Manager reads it via osConfig;
+# it does not declare a second, independent machine.de tree.
 {
   config,
   lib,

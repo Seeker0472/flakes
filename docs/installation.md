@@ -11,6 +11,31 @@
 
 ## 日常更新
 
+主机的 `hosts/<主机>/default.nix` 声明架构、角色 bundle、用户配置和功能选择；
+`outputs/nixos-configurations.nix` 只注册构建入口。用户、SSH、虚拟化、Steam 等使用
+NixOS 原生选项，组合策略保留在各自的 profile。Zed 的系统集成模块默认请求
+keyring，主机可以显式覆盖；Taskwarrior 由用户配置启用，Quickshell 跟随其状态。
+
+修改配置后，先检查全部平台的求值，再运行本机平台的检查：
+
+```bash
+nix flake check --no-build --all-systems --no-write-lock-file
+nix flake check --no-write-lock-file
+```
+
+`checks.configuration-evaluation` 按平台求值 NixOS 系统、独立 Home Manager，以及
+Nix-on-Droid 的断言和 Home Manager 配置；它不构建这些系统闭包。其他 checks 包含
+格式检查、部署 schema、模块依赖开关、风扇控制和 NetBird 同步测试；x86_64 另有
+QML 静态检查。风扇测试使用临时模拟 hwmon，并运行打包的 `fancontrol`，不访问真实硬件。
+Android 的完整 activation 依赖上游固定的 bootstrap store 路径，不属于该轻量检查。
+
+然后对受影响主机进行 dry-build；这一步仍可能需要下载缺失的依赖：
+
+```bash
+nix build --dry-run --no-link --no-write-lock-file \
+  '.#nixosConfigurations.miLaptop.config.system.build.toplevel'
+```
+
 安装完成后，日常更新使用 deploy-rs；主机专用步骤见 `docs/maintenance/`。
 `outputs/deploy.nix` 仍使用本地名称或 DHCP 租约地址；从其他网络部署 miLaptop 或
 Hippogriff 时，先确认它们的 NetBird 地址并传给 `--hostname`：

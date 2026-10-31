@@ -1,13 +1,8 @@
-{ inputs, ... }:
-let
-  sshKeys = import ./ssh-public-keys.nix;
-in
+{ ... }:
 {
   imports = [
-    ../home-manager.nix
+    ./account.nix
   ];
-
-  machine.users.seeker.authorizedKeys = sshKeys.authorizedKeys;
 
   home-manager = {
     users.seeker = {

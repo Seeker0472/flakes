@@ -8,6 +8,8 @@ import "TaskLogic.js" as TaskLogic
 Singleton {
     id: root
 
+    readonly property bool enabled: Commands.taskEnabled
+
     property var tasks: []
     property string selectedView: "today"
     property bool ready: false
@@ -85,7 +87,7 @@ Singleton {
 
     Timer {
         interval: 60000
-        running: true
+        running: root.enabled
         repeat: true
         onTriggered: {
             root.currentTime = new Date()
@@ -139,6 +141,7 @@ Singleton {
     }
 
     function refresh() {
+        if (!root.enabled) return
         root.currentTime = new Date()
         if (queryProcess.running || root.syncing) {
             root.refreshQueued = true
@@ -150,6 +153,7 @@ Singleton {
     }
 
     function probeSyncConfiguration(syncAfterProbe) {
+        if (!root.enabled) return
         root.syncAfterProbe = root.syncAfterProbe || Boolean(syncAfterProbe)
         if (!syncProbeProcess.running) syncProbeProcess.running = true
     }

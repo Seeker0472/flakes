@@ -7,6 +7,7 @@ Singleton {
     readonly property string niri: "@niri@"
     readonly property string focusWorkspace: "@focusWorkspace@"
     readonly property string btop: "@btop@"
+    readonly property bool taskEnabled: "@taskEnabled@" === "true"
     readonly property string task: "@task@"
     readonly property string taskTerminal: "@taskTerminal@"
     readonly property string python: "@python@"

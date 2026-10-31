@@ -3,13 +3,8 @@
   pkgs,
   ...
 }:
-let
-  sshKeys = import ./ssh-public-keys.nix;
-in
 {
-  imports = [ ../home-manager.nix ];
-
-  machine.users.seeker.authorizedKeys = sshKeys.authorizedKeys;
+  imports = [ ./account.nix ];
 
   programs.fish.enable = true;
   users.users.seeker.shell = pkgs.fish;

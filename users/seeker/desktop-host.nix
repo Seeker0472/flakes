@@ -27,6 +27,13 @@ in
 
   config = lib.mkMerge [
     {
+      programs.taskwarrior = {
+        enable = lib.mkDefault true;
+        package = pkgs.taskwarrior3;
+        dataLocation = "${config.xdg.dataHome}/task";
+        config.weekstart = "monday";
+      };
+
       programs.aloha = {
         enable = true;
         package = inputs.aloha.packages.${pkgs.stdenv.hostPlatform.system}.default;

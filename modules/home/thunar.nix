@@ -6,7 +6,7 @@
 {
   # These rules only target Hyprland; Hyprland's own enablement is already
   # covered by desktop.nix, so only the thunar flag is needed here.
-  config = lib.mkIf osConfig.machine.programs.thunar.enable {
+  config = lib.mkIf osConfig.programs.thunar.enable {
     wayland.windowManager.hyprland.settings = {
       "$fileManager" = "thunar";
       windowrule = [

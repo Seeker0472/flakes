@@ -1,9 +1,16 @@
-{ pkgs, ... }:
+{ inputs, pkgs, ... }:
 let
   user = "seeker";
   sshKeys = import ../../users/seeker/ssh-public-keys.nix;
 in
 {
+  imports = [
+    inputs.nixos-wsl.nixosModules.default
+    ../../modules/bundles/wsl.nix
+    ../../users/seeker/wsl.nix
+  ];
+
+  nixpkgs.hostPlatform = "x86_64-linux";
   networking.hostName = "nixos-wsl";
   system.stateVersion = "26.05";
 
@@ -24,11 +31,11 @@ in
       deploy = true;
       nixConfig.enable = true;
     };
-    services.openssh = {
-      enable = true;
-      passwordAuthentication = false;
-      openFirewall = true;
-    };
+  };
+
+  services.openssh = {
+    enable = true;
+    openFirewall = true;
   };
 
   # The shared CLI profile supplies GC, store optimisation and flakes.

@@ -1,5 +1,5 @@
 # The home LAN CIDR and mihomo ports are duplicated with
-# meta.nix (machine.programs.mihomo.share.allowedCIDRs / module defaults);
+# default.nix (machine.programs.mihomo.share.allowedCIDRs / module defaults);
 # keep them in one place here since the mihomo module lives outside hosts/.
 # If the mihomo module grows an openFirewall-based rule, switch to that.
 let

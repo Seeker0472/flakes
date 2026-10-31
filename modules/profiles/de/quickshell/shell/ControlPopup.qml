@@ -151,7 +151,7 @@ Rectangle {
             IconButton { visible: Commands.fanEnabled; icon: "󰈐"; tooltip: "Fan control"; selected: root.page === "fan"; onClicked: UiState.popupPage = "fan" }
             IconButton { visible: Commands.rgbEnabled; icon: "󰏘"; tooltip: "RGB lighting"; selected: root.page === "rgb"; onClicked: UiState.popupPage = "rgb" }
             IconButton { icon: "󰃭"; tooltip: "Calendar"; selected: root.page === "calendar"; onClicked: UiState.popupPage = "calendar" }
-            IconButton { icon: "󰄬"; tooltip: "Tasks"; selected: root.page === "tasks"; onClicked: UiState.popupPage = "tasks" }
+            IconButton { visible: Commands.taskEnabled; icon: "󰄬"; tooltip: "Tasks"; selected: root.page === "tasks"; onClicked: UiState.popupPage = "tasks" }
             IconButton { icon: "󰐥"; tooltip: "Power"; selected: root.page === "power"; onClicked: UiState.popupPage = "power" }
         }
 

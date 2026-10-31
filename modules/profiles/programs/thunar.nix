@@ -5,11 +5,8 @@
   ...
 }:
 {
-  options.machine.programs.thunar.enable = lib.mkEnableOption "Thunar";
-
-  config = lib.mkIf config.machine.programs.thunar.enable {
+  config = lib.mkIf config.programs.thunar.enable {
     programs.thunar = {
-      enable = true;
       plugins = with pkgs; [
         thunar-archive-plugin
         thunar-volman

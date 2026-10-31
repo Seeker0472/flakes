@@ -8,6 +8,12 @@
 let
   deCfg = lib.attrByPath [ "machine" "de" ] { } osConfig;
   enabled = deCfg.quickshell.enable or false;
+  taskEnabled = config.programs.taskwarrior.enable;
+  taskCommand =
+    if taskEnabled then
+      lib.getExe config.programs.taskwarrior.package
+    else
+      "${pkgs.coreutils}/bin/false";
   fanCfg = config.programs.niri-shell.fanControl;
   fanCommand =
     if fanCfg.enable && fanCfg.package != null then
@@ -37,7 +43,7 @@ let
   '';
 
   taskTerminalScript = pkgs.writeShellScriptBin "niri-shell-taskwarrior" ''
-    exec ${pkgs.kitty}/bin/kitty --class RTG ${pkgs.fish}/bin/fish -C '${lib.getExe pkgs.taskwarrior3} next'
+    exec ${pkgs.kitty}/bin/kitty --class RTG ${pkgs.fish}/bin/fish -C '${taskCommand} next'
   '';
 
   cavaConfig = pkgs.writeText "niri-shell-cava.conf" ''
@@ -67,8 +73,11 @@ let
       --subst-var-by niri ${lib.getExe pkgs.niri} \
       --subst-var-by focusWorkspace ${lib.getExe focusWorkspaceScript} \
       --subst-var-by btop ${lib.getExe btopScript} \
-      --subst-var-by task ${lib.getExe pkgs.taskwarrior3} \
-      --subst-var-by taskTerminal ${lib.getExe taskTerminalScript} \
+      --subst-var-by taskEnabled ${lib.boolToString taskEnabled} \
+      --subst-var-by task ${taskCommand} \
+      --subst-var-by taskTerminal ${
+        if taskEnabled then lib.getExe taskTerminalScript else taskCommand
+      } \
       --subst-var-by python ${lib.getExe pkgs.python3} \
       --subst-var-by sampler "$out/sampler.py" \
       --subst-var-by pwDump ${pkgs.pipewire}/bin/pw-dump \
@@ -125,13 +134,6 @@ in
     ];
 
     xdg.configFile."quickshell/niri-shell".source = commands;
-
-    programs.taskwarrior = {
-      enable = true;
-      package = pkgs.taskwarrior3;
-      dataLocation = "${config.xdg.dataHome}/task";
-      config.weekstart = "monday";
-    };
 
     home.packages =
       (with pkgs; [
