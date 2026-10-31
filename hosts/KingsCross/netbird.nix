@@ -8,25 +8,18 @@ let
   shared = import ../lib/hardened-service.nix;
   domain = "netbird.vps.seekerer.com";
   publicPort = 28443;
+  relayPort = 28444;
   stunPort = 28478;
   backendPort = 8081;
   publicUrl = "https://${domain}:${toString publicPort}";
+  relayUrl = "rels://${domain}:${toString relayPort}";
   stateDirectory = "/var/lib/netbird";
+  certificateDirectory = config.security.acme.certs.${domain}.directory;
+  relayCredentialsDirectory = "/run/credentials/netbird-relay.service";
 
-  netbirdServer = pkgs.netbird.overrideAttrs (old: {
-    pname = "netbird-server";
-    subPackages = [ "combined" ];
-    postInstall = ''
-      mv "$out/bin/combined" "$out/bin/netbird-server"
-    '';
-    doInstallCheck = false;
-    passthru = (old.passthru or { }) // {
-      tests = { };
-    };
-    meta = old.meta // {
-      mainProgram = "netbird-server";
-    };
-  });
+  netbirdServer = pkgs.netbird.override {
+    componentName = "combined";
+  };
 in
 {
   environment.systemPackages = [ netbirdServer ];
@@ -55,6 +48,7 @@ in
           sopsFile = ./netbird.secrets.yaml;
           owner = "netbird";
           group = "netbird";
+          restartUnits = lib.optional (name == "netbird_relay_auth_secret") "netbird-relay.service";
         });
 
     templates."netbird-config.yaml" = {
@@ -66,8 +60,14 @@ in
         server:
           listenAddress: ":${toString backendPort}"
           exposedAddress: "${publicUrl}"
-          stunPorts:
-            - ${toString stunPort}
+          # External relays disable the combined server's embedded relay/STUN.
+          stuns:
+            - uri: "stun:${domain}:${toString stunPort}"
+          relays:
+            addresses:
+              - "${relayUrl}"
+            credentialsTTL: "12h"
+            secret: "${config.sops.placeholder.netbird_relay_auth_secret}"
           metricsPort: 9090
           healthcheckAddress: "127.0.0.1:9000"
           logLevel: "info"
@@ -107,10 +107,14 @@ in
     documentation = [ "https://docs.netbird.io/selfhosted/" ];
     environment.NB_DISABLE_GEOLOCATION = "true";
     wantedBy = [ "multi-user.target" ];
-    wants = [ "network-online.target" ];
+    wants = [
+      "network-online.target"
+      "netbird-relay.service"
+    ];
     after = [
       "network-online.target"
       "sops-nix.service"
+      "netbird-relay.service"
     ];
     serviceConfig = {
       Type = "simple";
@@ -129,7 +133,36 @@ in
     // shared.serviceConfig;
   };
 
+  # QUIC needs TLS in the relay itself, with credentials scoped to this unit.
+  systemd.services.netbird-relay = {
+    environment = {
+      NB_TLS_CERT_FILE = "${relayCredentialsDirectory}/tls_cert";
+      NB_TLS_KEY_FILE = "${relayCredentialsDirectory}/tls_key";
+    };
+    wants = [ "acme-finished-${domain}.target" ];
+    after = [
+      "sops-nix.service"
+      "acme-finished-${domain}.target"
+    ];
+    serviceConfig.LoadCredential = lib.mkAfter [
+      "tls_cert:${certificateDirectory}/fullchain.pem"
+      "tls_key:${certificateDirectory}/key.pem"
+    ];
+  };
+
   services = {
+    netbird.relay = {
+      enable = true;
+      authSecretFile = config.sops.secrets.netbird_relay_auth_secret.path;
+      settings = {
+        listen-address = ":${toString relayPort}";
+        exposed-address = relayUrl;
+        enable-stun = true;
+        stun-ports = [ stunPort ];
+        health-listen-address = "127.0.0.1:9001";
+      };
+    };
+
     netbird.server.dashboard = {
       enable = true;
       enableNginx = false;
@@ -167,7 +200,7 @@ in
         '';
 
         locations = {
-          "~ ^/(relay|ws-proxy/)" = {
+          "~ ^/ws-proxy/" = {
             proxyPass = "http://127.0.0.1:${toString backendPort}";
             proxyWebsockets = true;
             recommendedProxySettings = false;
@@ -226,11 +259,19 @@ in
   security.acme = {
     acceptTerms = true;
     defaults.email = "gmx472@qq.com";
-    certs.${domain} = shared.mkAlidnsCert { inherit config; };
+    certs.${domain} = (shared.mkAlidnsCert { inherit config; }) // {
+      reloadServices = [ "netbird-relay.service" ];
+    };
   };
 
   networking.firewall = {
-    allowedTCPPorts = [ publicPort ];
-    allowedUDPPorts = [ stunPort ];
+    allowedTCPPorts = [
+      publicPort
+      relayPort
+    ];
+    allowedUDPPorts = [
+      relayPort
+      stunPort
+    ];
   };
 }

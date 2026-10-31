@@ -71,6 +71,14 @@ nix run nixpkgs#nixos-rebuild -- switch \
   the same ports there too; the NixOS firewall only filters packets that reach
   the host.
 
+## NetBird relay
+
+`netbird-relay.service` serves QUIC (UDP) and WebSocket (TCP) on port 28444,
+plus STUN on UDP 28478. Allow these ports in the provider firewall too.
+Certificate renewal automatically restarts the relay. Check `netbird status -d`
+on a client: `rels://netbird.vps.seekerer.com:28444` should be available via
+`quic` or `ws`, whichever connects first.
+
 ## UniVPN route through NetBird
 
 `hosts/KingsCross/uni-next.nix` runs `uni-next` with a dedicated TUN and a
