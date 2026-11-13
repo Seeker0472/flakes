@@ -67,6 +67,13 @@ installs OMP and writes `~/.omp/agent/models.yml` with only
 `deepseek-official` and `claude-code`. The keyless development container
 disables AI; burrow does not receive these credentials.
 
+The DeepSeek key is exported as both `DEEPSEEK_OFFICIAL_API_KEY` (the custom
+model provider) and `DEEPSEEK_API_KEY` (OMP's built-in `web/deepseek` search
+engine). Both names use the same SOPS secret. OMP's mutable search settings
+live in `~/.omp/agent/config.yml`; `modelRoles.web` selects the primary model
+and `retry.fallbackChains.web` lists its fallbacks. GPT search can use an
+existing `openai-codex` OAuth login independently of the chat model provider.
+
 ## Taskwarrior synchronization
 
 `users/seeker/taskwarrior.secrets.yaml` contains the shared TaskChampion client

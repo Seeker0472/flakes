@@ -19,6 +19,7 @@ lib.mkIf config.programs.ai.enable {
       content = ''
         CLAUDE_CODE_API_KEY=${config.sops.placeholder."ai-claude-code-api-key"}
         DEEPSEEK_OFFICIAL_API_KEY=${config.sops.placeholder."ai-deepseek-official-api-key"}
+        DEEPSEEK_API_KEY=${config.sops.placeholder."ai-deepseek-official-api-key"}
       '';
     };
   };
