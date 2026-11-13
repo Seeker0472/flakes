@@ -46,7 +46,13 @@
 
   programs = {
     gnupg.agent.enable = true;
+    # The tablet's terminal (GNOME Console) spawns the account login shell
+    # unless a custom command is configured, so make fish that shell; this
+    # also registers fish in /etc/shells.
+    fish.enable = true;
   };
+
+  users.users.seeker.shell = pkgs.fish;
 
   home-manager.users.seeker.programs.zed-editor.enable = true;
 
