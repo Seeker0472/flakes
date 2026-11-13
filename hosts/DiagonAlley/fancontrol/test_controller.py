@@ -198,35 +198,37 @@ class ControllerTest(unittest.TestCase):
             for channel in (1, 3, 4)
         }
 
-        process = subprocess.Popen(
-            [os.environ["FANCONTROL_UNDER_TEST"], str(config_path)],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-        )
-        try:
-            for _ in range(50):
-                if all(
-                    (self.it87 / f"pwm{channel}_enable").read_text(encoding="ascii").strip()
-                    == "1"
-                    for channel in (1, 3, 4)
-                ):
-                    break
-                if process.poll() is not None:
-                    break
-                time.sleep(0.05)
-            self.assertIsNone(process.poll())
-            self.assertTrue(
-                all(
-                    (self.it87 / f"pwm{channel}_enable").read_text(encoding="ascii").strip()
-                    == "1"
-                    for channel in (1, 3, 4)
-                )
+        output_path = Path(self.temporary.name) / "fancontrol.log"
+        with output_path.open("w", encoding="utf-8") as log:
+            process = subprocess.Popen(
+                [os.environ["FANCONTROL_UNDER_TEST"], str(config_path)],
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                text=True,
             )
-        finally:
-            process.terminate()
-            output, _ = process.communicate(timeout=5)
+            try:
+                # Enabling PWM precedes the fan spin-up checks. Wait for the
+                # control loop too, including when running through qemu-user.
+                deadline = time.monotonic() + 30
+                while time.monotonic() < deadline:
+                    if "Starting automatic fan control" in output_path.read_text(encoding="utf-8"):
+                        break
+                    if process.poll() is not None:
+                        break
+                    time.sleep(0.05)
+                self.assertIsNone(process.poll())
+                self.assertTrue(
+                    all(
+                        (self.it87 / f"pwm{channel}_enable").read_text(encoding="ascii").strip()
+                        == "1"
+                        for channel in (1, 3, 4)
+                    )
+                )
+            finally:
+                process.terminate()
+                process.communicate(timeout=10)
 
+        output = output_path.read_text(encoding="utf-8")
         self.assertIn("Starting automatic fan control", output)
         for channel in (1, 3, 4):
             self.assertEqual(
