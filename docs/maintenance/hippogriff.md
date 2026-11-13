@@ -6,10 +6,14 @@ share the same hardware, tablet bundle and user modules:
 
 - `Hippogriff` applies the port overlay directly. Device packages are native
   aarch64, so the tablet can build and replace its own boot chain.
-- `HippogriffFast` additionally applies `overlay-inject.nix` with
-  `liuqin.lib.pkgsArm`. The manifest's kernel, U-Boot, firmware and sensor
-  packages are host-built x86_64→aarch64 outputs; the remaining system stays
-  native aarch64.
+- `HippogriffFast` additionally applies `overlay-inject.nix` with the local
+  BSP at `/home/seeker/Develop/liuqin/liuqin-nixos`. Its kernel, U-Boot,
+  firmware and fixed device daemons/libraries are host-built
+  x86_64→aarch64 outputs; runtime helpers (including the SLPI script and
+  fingerprint stack) use the consumer's native aarch64 nixpkgs so their
+  tools match system PAM/glibc. The regular `Hippogriff` profile still
+  consumes the published `liuqin` input. After editing the local BSP,
+  refresh its locked snapshot with `nix flake update liuqin-local`.
 
 The tablet keeps Android in `userdata` and boots NixOS from the `linux`
 partition through U-Boot's extlinux generation menu.
@@ -41,10 +45,11 @@ nix run .#deploy-rs -- .#hippogriff-fast
 ```
 
 Both nodes use ssh-ng as `seeker` and activate with
-`switch-to-configuration switch`; interactive sudo prompts once. The tablet
-trusts `seeker` for unsigned device packages. Their configured target is in
-`outputs/deploy.nix`; verify it before use and pass `--hostname <address>` if
-the configured target is stale.
+`switch-to-configuration switch`; activation requires working sudo on the
+tablet. If deploy-rs cannot provide the password over non-interactive SSH,
+use the manual fallback below. The tablet trusts `seeker` for unsigned
+device packages. Their configured target is in `outputs/deploy.nix`; verify
+it before use and pass `--hostname <address>` if the target is stale.
 
 For `hippogriff`, `--remote-build` lets the tablet build its native device
 packages; without it the x86_64 host uses binfmt. Both routes realise the same
@@ -71,8 +76,13 @@ TO=$(readlink -f result-hippogriff)
 printf 'SYSTEM_PATH=%s\nLOADER=%s\n' "$TO" "$LOADER"
 
 NIX_SSHOPTS="-i $HOME/.ssh/id_admin" \
-  nix copy --to "ssh-ng://seeker@$TABLET_HOST" "$TO" "$LOADER"
+  nix copy --no-check-sigs --to "ssh-ng://seeker@$TABLET_HOST" "$TO" "$LOADER"
 ```
+
+For a fast-profile manual push, replace `Hippogriff` with
+`HippogriffFast` in both Nix selectors above; use the resulting fast
+system path for `TO`. `--no-check-sigs` allows locally built, unsigned
+outputs to be sent to the trusted tablet user.
 
 On the tablet, as root, set `TO` and `LOADER` to the printed store paths:
 

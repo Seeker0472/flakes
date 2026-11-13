@@ -6,9 +6,11 @@
         "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
         "https://mirrors.ustc.edu.cn/nix-channels/store"
         "https://cache.numtide.com"
+        "https://liuqin-nixos.cachix.org"
       ];
       trusted-public-keys = [
         "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
+        "liuqin-nixos.cachix.org-1:eZAC5Way06MN/QaQjbVZY0dnhleGCH7X7C+EUF2+Hwg="
       ];
       auto-optimise-store = true;
       experimental-features = [

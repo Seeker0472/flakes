@@ -95,6 +95,22 @@
         "type": "github"
       }
     },
+    "deviceNixpkgs_2": {
+      "locked": {
+        "lastModified": 1789149629,
+        "narHash": "sha256-H6GwaZzZf+4npqv0tph94w9tZddSjFjmQrVsW0z78uk=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "eaad089433ca2bb662274377d33df3d0e51ef28b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "eaad089433ca2bb662274377d33df3d0e51ef28b",
+        "type": "github"
+      }
+    },
     "disko": {
       "inputs": {
         "nixpkgs": [
@@ -117,6 +133,23 @@
       }
     },
     "firmwareAssets": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1793017115,
+        "narHash": "sha256-89u8dl5K169+U7jIV06JdDa3gqZlpFKUbwc8yh2Rp3U=",
+        "ref": "main",
+        "rev": "68cdcd86f8e4247d477850116d0cca0477cfa3a3",
+        "revCount": 1,
+        "type": "git",
+        "url": "ssh://git@github.com/Seeker0472/liuqin-firmware-assets-OS2.git"
+      },
+      "original": {
+        "ref": "main",
+        "type": "git",
+        "url": "ssh://git@github.com/Seeker0472/liuqin-firmware-assets-OS2.git"
+      }
+    },
+    "firmwareAssets_2": {
       "flake": false,
       "locked": {
         "lastModified": 1793017115,
@@ -336,6 +369,25 @@
         "owner": "Seeker0472",
         "repo": "liuqin-nixos",
         "type": "github"
+      }
+    },
+    "liuqin-local": {
+      "inputs": {
+        "deviceNixpkgs": "deviceNixpkgs_2",
+        "firmwareAssets": "firmwareAssets_2",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1793697927,
+        "narHash": "sha256-rsb3B2uqMec983TcHyexxHtrUZ3H7BWpAvroQomVDSY=",
+        "path": "/home/seeker/Develop/liuqin/liuqin-nixos",
+        "type": "path"
+      },
+      "original": {
+        "path": "/home/seeker/Develop/liuqin/liuqin-nixos",
+        "type": "path"
       }
     },
     "llm-agents": {
@@ -601,6 +653,7 @@
         "home-manager": "home-manager",
         "impermanence": "impermanence",
         "liuqin": "liuqin",
+        "liuqin-local": "liuqin-local",
         "llm-agents": "llm-agents",
         "nix-on-droid": "nix-on-droid",
         "nixos-wsl": "nixos-wsl",

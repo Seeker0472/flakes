@@ -2,15 +2,16 @@
 let
   lib = inputs.nixpkgs.lib;
 
-  mkHost =
-    module:
+  mkHostWithInputs =
+    hostInputs: module:
     lib.nixosSystem {
-      specialArgs = { inherit inputs; };
+      specialArgs.inputs = hostInputs;
       modules = [
         ./common/nixpkgs-settings.nix
         module
       ];
     };
+  mkHost = mkHostWithInputs inputs;
   devVM = self.nixosConfigurations.devVM.config;
   devVMQemu = devVM.system.build.vmWithBootLoader;
 in
@@ -24,7 +25,9 @@ in
     Willow = mkHost ../hosts/Willow;
     burrow = mkHost ../hosts/burrow;
     Hippogriff = mkHost ../hosts/Hippogriff;
-    HippogriffFast = mkHost ../hosts/Hippogriff/fast.nix;
+    HippogriffFast = mkHostWithInputs (
+      inputs // { liuqin = inputs.liuqin-local; }
+    ) ../hosts/Hippogriff/fast.nix;
   };
 
   perSystem =

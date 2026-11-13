@@ -68,6 +68,12 @@
       # Share nixpkgs with this configuration.
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # Fast tablet builds use the adjacent BSP worktree, without changing the
+    # released input used by the normal Hippogriff profile.
+    liuqin-local = {
+      url = "path:/home/seeker/Develop/liuqin/liuqin-nixos";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     uni-next = {
       url = "github:Seeker0472/uni-next/1520ed0bfa8388766f4af1a143c46e48c21bdeff";
       inputs.nixpkgs.follows = "nixpkgs";
