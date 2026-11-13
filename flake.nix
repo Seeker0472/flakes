@@ -54,7 +54,8 @@
     };
     llm-agents = {
       url = "github:numtide/llm-agents.nix";
-      inputs.nixpkgs.follows = "nixpkgs";
+      # Keep the package set pinned by llm-agents: its recipes and binary cache
+      # track that toolchain, including changes to Rust's system-library hooks.
     };
     deploy-rs = {
       url = "github:serokell/deploy-rs";
